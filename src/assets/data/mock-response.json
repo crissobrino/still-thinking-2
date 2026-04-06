@@ -1,0 +1,20 @@
+{
+  "answer": "He encontrado 2 artículos relevantes sobre modelos de tópicos neuronales federados.",
+  "language": "es",
+  "articles": [
+    {
+      "title": "Federated Neural Topic Modeling for Diverse Data",
+      "authors": "Smith et al.",
+      "year": 2023,
+      "similarity_score": 0.92,
+      "snippet": "This paper introduces a neural architecture for federated learning in NLP."
+    },
+    {
+      "title": "Privacy-Preserving Topic Models",
+      "authors": "Garcia, J.",
+      "year": 2022,
+      "similarity_score": 0.78,
+      "snippet": "A study on how federated approaches affect neural models."
+    }
+  ]
+}

@@ -13,3 +13,10 @@
     "src/**/*.spec.ts"
   ]
 }
+
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  }
+}
