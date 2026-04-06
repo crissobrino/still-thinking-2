@@ -2,12 +2,13 @@ export interface Article {
   title: string;
   authors: string;
   year: number;
-  similarity_score: number;
-  snippet: string;
+  url: string;
+  relevanceScore: number; // Para la "Feature Adicional" de métricas
+  keyDifference: string;  // Requisito funcional: diferencias con tu idea
 }
 
 export interface RagResponse {
   answer: string;
   articles: Article[];
-  language: string;
+  language: string;       // Requisito funcional: mismo idioma
 }
