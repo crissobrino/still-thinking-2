@@ -1,29 +1,20 @@
-def build_comparison_prompt(query: str, context: str, response_language: str) -> str:
-    return f"""
-You are an academic research assistant.
+from pathlib import Path
 
-Rules:
-1. Use only the information in the provided context.
-2. Do not invent articles, authors, methods, results, or claims.
-3. If the context is empty or insufficient, say so clearly.
-4. Respond in {response_language}.
-5. Keep article titles exactly as provided.
+PROMPT_PATH = Path("prompts/comparison_prompt.txt")
 
-Task:
-Compare the user's proposed research direction with the retrieved articles.
-Highlight the main similarities and differences.
-Be precise and cautious.
 
-Output format:
-- Research direction:
-- Relevant articles:
-- Key differences:
-- Possible novelty:
-- Conclusion:
+def load_prompt_template() -> str:
+    return PROMPT_PATH.read_text(encoding="utf-8")
 
-User query:
-{query}
 
-Context:
-{context}
-""".strip()
+def build_comparison_prompt(query: str, context: str, language: str) -> str:
+    template = load_prompt_template()
+
+    try:
+        return template.format(
+            query=query,
+            context=context,
+            language=language
+        )
+    except KeyError as e:
+        raise ValueError(f"Missing placeholder in prompt template: {e}")
