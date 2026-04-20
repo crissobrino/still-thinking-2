@@ -35,7 +35,7 @@ def search(query: str, k: int = 5):
 
 
 if __name__ == "__main__":
-    query = "federated neural topic models"
+    query = "machine learning for genomics"
     results = search(query)
 
     for i, result in enumerate(results, 1):
