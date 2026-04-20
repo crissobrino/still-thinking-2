@@ -45,8 +45,7 @@ Thumbs.db
 
 # Backend data
 /backend-fastapi/data
-/chroma_db
-/backend-fastapi/data/chroma_db
+/backend-fastapi/chroma_db
 *.jsonl
 *.json
 *.zip

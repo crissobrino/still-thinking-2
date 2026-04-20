@@ -1,7 +1,12 @@
-import chromadb
+import os
+from pathlib import Path
+from chromadb import PersistentClient
 
-client = chromadb.PersistentClient(path="chroma_db")
-collection = client.get_collection(name="papers")
+BASE_DIR = Path(__file__).resolve().parent.parent
+CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
+
+client = PersistentClient(path=CHROMA_PATH)
+collection = client.get_collection("papers")
 
 
 def search(query: str, k: int = 5):
