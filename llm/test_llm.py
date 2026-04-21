@@ -3,22 +3,27 @@ from llm.language import detect_language
 from llm.prompts import build_comparison_prompt
 from llm.guardrails import should_refuse
 
+import requests
+
+def fetch_papers(query: str, k: int = 5) -> list[dict]:
+    response = requests.post("http://localhost:8000/search", json={"query": query, "k": k})
+    results = response.json()["results"]
+    return [
+        {
+            "title": doc["title"],
+            "abstract": doc["abstract_snippet"],
+            "score": 1 - doc["distance"],  # convert distance → similarity
+        }
+        for doc in results
+    ]
+
+
 # 1. User writes query
 query = input("Enter your research query: ").strip()
 
 # 2. Temporary fake retrieved documents
-retrieved_docs = [
-    {
-        "title": "Federated topic modeling",
-        "abstract": "This paper studies federated approaches to topic modeling using probabilistic models.",
-        "score": 0.82,
-    },
-    {
-        "title": "Federated non-negative matrix factorization for short text topic modeling",
-        "abstract": "This paper explores federated NMF methods for short-text topic discovery.",
-        "score": 0.76,
-    },
-]
+retrieved_docs = fetch_papers(query)
+# rest of your pipeline (guardrails, language detection, prompt, LLM) stays the same
 
 scores = [doc["score"] for doc in retrieved_docs]
 
