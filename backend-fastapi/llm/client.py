@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 class UC3MClient:
     def __init__(self):
         self.api_key = os.getenv("OLLAMA_API_KEY")

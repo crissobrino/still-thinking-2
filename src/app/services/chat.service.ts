@@ -1,30 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { RagResponse } from '../models/rag-response.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
+  // FastAPI default URL is 8000. Use /search as defined in your main.py
+  private API_URL = 'http://localhost:8000/search';
 
-  sendQuery(query: string): Observable<RagResponse> {
-    // Simulamos una respuesta del backend (Mock data)
-    const mockResponse: RagResponse = {
-      answer: "He encontrado que tu investigación sobre redes neuronales se diferencia de los artículos de ACL en que ellos no aplican federated learning. [1].",
-      articles: [
-        {
-          title: "Federated Topic Modeling for Health Data",
-          authors: "Smith et al.",
-          year: 2023,
-          url: "http://example.com",
-          relevanceScore: 0.95,
-          keyDifference: "Usa modelos Bayesianos en lugar de redes neuronales puras."
-        }
-      ],
-      language: "es"
-    };
+  constructor(private http: HttpClient) {}
 
-    // 'of' crea un observable y 'delay' simula el tiempo que tarda la IA (Response Time)
-    return of(mockResponse).pipe(delay(10));
+  // This replaces your mock logic
+  getQueryResponse(query: string): Observable<RagResponse> {
+    // We send { query: query } to match your SearchRequest BaseModel in Python
+    return this.http.post<RagResponse>(this.API_URL, { query: query });
   }
 }

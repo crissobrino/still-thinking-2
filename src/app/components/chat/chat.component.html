@@ -1,5 +1,4 @@
 <div class="flex h-screen bg-gray-50">
-  
   <div class="flex-1 flex flex-col border-r border-gray-200">
     <div class="p-4 bg-white border-b font-bold text-lg text-indigo-700">
       Research Assistant AI
@@ -10,31 +9,33 @@
         <div [ngClass]="msg.isUser ? 'justify-end' : 'justify-start'" class="flex">
           <div [ngClass]="msg.isUser ? 'bg-indigo-600 text-white rounded-l-lg rounded-tr-lg' : 'bg-white text-gray-800 border rounded-r-lg rounded-tl-lg'" 
                class="max-w-[80%] p-3 shadow-sm">
-            <p class="text-sm leading-relaxed">{{ msg.text }}</p>
-            
-            @if (!msg.isUser && currentResponse?.articles?.length) {
-              <div class="mt-2 text-xs text-indigo-400 font-mono">
-                Fuentes: [1] [2]
-              </div>
-            }
+            <p class="text-sm whitespace-pre-wrap">{{ msg.text }}</p>
           </div>
         </div>
       }
 
       @if (isLoading) {
-        <div class="flex justify-start animate-pulse">
-          <div class="bg-gray-200 h-16 w-3/4 rounded-lg"></div>
+        <div class="flex justify-start">
+          <div class="bg-gray-100 p-3 rounded-lg animate-pulse text-xs text-gray-500">
+            🤖 Analizando artículos y generando comparación...
+          </div>
         </div>
       }
     </div>
 
     <div class="p-4 bg-white border-t">
       <div class="flex gap-2">
-        <input [(ngModel)]="userInput" (keyup.enter)="onSendMessage()" 
+        <input id="userInput" 
+               name="userInput" 
+               [(ngModel)]="userInput" 
+               (keyup.enter)="onSendMessage()" 
+               [disabled]="isLoading"
                placeholder="Pregunta sobre artículos de investigación..."
-               class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <button (click)="onSendMessage()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-          Enviar
+               class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100">
+        <button (click)="onSendMessage()" 
+                [disabled]="isLoading"
+                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300">
+          {{ isLoading ? '...' : 'Enviar' }}
         </button>
       </div>
     </div>
@@ -45,29 +46,41 @@
       📚 Artículos Relevantes
     </h3>
 
-    @if (currentResponse?.articles?.length) {
-      @for (article of currentResponse?.articles; track article.title) {
-        <div class="bg-white p-3 rounded-lg shadow-sm border mb-3 relative group">
+    @if (currentResponse && currentResponse.articles && currentResponse.articles.length > 0) {
+      @for (article of currentResponse.articles; track $index) {
+        <div class="bg-white p-3 rounded-lg shadow-sm border mb-3 relative">
+          
           <span class="absolute -top-2 -right-2 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200">
-            98% match
+            {{ article.relevanceScore | number:'1.1-1' }}% match
           </span>
 
           <h4 class="text-xs font-bold text-indigo-900 leading-tight mb-1">{{ article.title }}</h4>
-          <p class="text-[10px] text-gray-500 mb-2">{{ article.authors }}</p>
+          <p class="text-[10px] text-gray-500 mb-2">
+            {{ article.authors }} @if(article.year){ ({{ article.year }}) }
+          </p>
           
-          <div class="text-[10px] bg-amber-50 p-2 rounded border-l-2 border-amber-400 italic">
-            "A diferencia de tu idea, este autor usa redes LSTM..."
-          </div>
-
-          <button class="mt-2 w-full py-1 text-[10px] border border-gray-300 rounded hover:bg-gray-50">
-            Ver Resumen Automático
+          <button class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium mb-2 flex items-center gap-1 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Ver resumen del paper
           </button>
+          
+          @if (article.keyDifference) {
+            <div class="text-[10px] bg-amber-50 p-2 rounded border-l-2 border-amber-400 italic text-gray-700">
+               {{ article.keyDifference }}
+            </div>
+          }
         </div>
       }
     } @else {
-      <p class="text-xs text-gray-400 text-center mt-10">
-        Haz una pregunta para ver las fuentes bibliográficas aquí.
-      </p>
+      <div class="text-xs text-gray-400 text-center mt-10">
+        @if (isLoading) {
+          <p class="animate-bounce">Buscando fuentes...</p>
+        } @else {
+          <p>No hay artículos para mostrar.</p>
+        }
+      </div>
     }
   </div>
 </div>
