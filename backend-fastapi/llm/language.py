@@ -1,13 +1,17 @@
-from langdetect import detect
-
-#Language detection
+import langid
 
 def detect_language(text: str) -> str:
-    try:
-        lang = detect(text)
-    except Exception:
-        return "English"
+    # Retorna el código ISO (es, en, fr, de, etc.)
+    lang, _ = langid.classify(text)
+    return lang
 
-    if lang == "es":
-        return "Spanish"
-    return "English"
+def get_language_name(lang_code: str) -> str:
+    # Mapeo para el prompt del LLM
+    names = {
+        'es': 'Spanish',
+        'en': 'English',
+        'fr': 'French',
+        'it': 'Italian',
+        'de': 'German'
+    }
+    return names.get(lang_code, 'English')

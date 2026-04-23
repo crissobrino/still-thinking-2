@@ -9,6 +9,51 @@ from llm.client import UC3MClient
 from llm.language import detect_language
 from llm.prompts import build_comparison_prompt
 from llm.guardrails import should_refuse
+import langid
+from deep_translator import GoogleTranslator
+
+def call_llama_uc3m(original_query, context_en, lang_code):
+    # Mapeo de códigos a nombres para el modelo
+    iso_to_name = {'es': 'Spanish', 'en': 'English', 'fr': 'French', 'de': 'German'}
+    target_lang = iso_to_name.get(lang_code, 'English')
+
+    system_prompt = f"""
+    You are an expert academic research assistant.
+    
+    TASK:
+    1. Analyze the researcher's idea: "{original_query}"
+    2. Compare it with the provided research papers (Context).
+    3. Highlight key differences and similarities.
+
+    CONSTRAINTS:
+    - You MUST respond entirely in {target_lang}.
+    - The provided context is in English, but your analysis must be in {target_lang}.
+    - Keep paper titles in their original language.
+    - If no relevant papers are found, state exactly: "I’m sorry, but I do not have any additional specific articles in the current corpus on this topic." (Translated to {target_lang}).
+    - DO NOT hallucinate.
+    """
+    
+    # Aquí haces el fetch a https://yiyuan.tsc.uc3m.es/api/generate
+    
+def assistant_logic(user_query):
+    # 1. DETECTAR IDIOMA (Instantáneo)
+    # langid.classify devuelve ('es', -123.45)
+    lang, _ = langid.classify(user_query) 
+    
+    # 2. TRADUCIR PARA CHROMADB (Solo si no es inglés)
+    query_for_search = user_query
+    if lang != 'en':
+        query_for_search = GoogleTranslator(source='auto', target='en').translate(user_query)
+    
+    # 3. RECUPERACIÓN (ChromaDB ahora recibe inglés, mayor precisión)
+    # results = collection.query(query_texts=[query_for_search], n_results=5)
+    context_en = " ".join([res for res in results['documents'][0]])
+
+    # 4. GENERACIÓN FINAL CON LLAMA
+    # Le pasamos el contexto en inglés pero le ordenamos responder en el idioma original
+    final_response = call_llama_uc3m(user_query, context_en, lang)
+    
+    return final_response
 
 app = FastAPI()
 
@@ -26,19 +71,27 @@ class SearchRequest(BaseModel):
 
 client = UC3MClient()
 
+from deep_translator import GoogleTranslator
+from llm.language import detect_language, get_language_name
+
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
-    # 1. Recuperar de Chroma
-    results = search(request.query, request.k)
+    # 1. DETECCIÓN DE IDIOMA Y TRADUCCIÓN PARA BÚSQUEDA
+    user_lang_code = detect_language(request.query)
+    target_language_name = get_language_name(user_lang_code)
+    
+    # Traducimos la query al inglés para que ChromaDB encuentre mejores resultados
+    query_for_chroma = request.query
+    if user_lang_code != 'en':
+        query_for_chroma = GoogleTranslator(source='auto', target='en').translate(request.query)
+
+    # 2. RECUPERACIÓN DE CHROMA (Usando la query en inglés)
+    results = search(query_for_chroma, request.k)
     
     retrieved_docs = []
-    articles_for_frontend = []
-
-    # Verificamos si 'results' es una lista (procesada) o un dict (crudo de Chroma)
+    # ... (Tu lógica de procesamiento de 'results' se mantiene igual)
     if isinstance(results, list):
-        # Si ya es una lista, iteramos directamente
         for item in results:
-            # Adaptamos según lo que devuelva tu script 'search_chroma'
             score = 1 - item.get('distance', 0)
             retrieved_docs.append({
                 "title": item.get('title', 'Sin título'),
@@ -48,11 +101,10 @@ async def search_endpoint(request: SearchRequest):
                 "authors": item.get('authors', 'Desconocidos')
             })
     else:
-        # Si es el diccionario crudo de Chroma
+        # Lógica para dict crudo
         documents = results.get('documents', [[]])[0]
         metadatas = results.get('metadatas', [[]])[0]
         distances = results.get('distances', [[]])[0]
-
         for i in range(len(documents)):
             score = 1 - distances[i]
             retrieved_docs.append({
@@ -63,36 +115,44 @@ async def search_endpoint(request: SearchRequest):
                 "year": metadatas[i].get("update_date", "Desconocido")
             })
 
-    # 2. Guardrails (con print para depurar)
+    # 3. GUARDRAILS (Anti-alucinación de la rúbrica)
     scores = [doc["score"] for doc in retrieved_docs]
-    print(f"DEBUG: Query: {request.query} | Scores: {scores}")
-
     if should_refuse(retrieved_docs, scores):
+        # Mensaje obligatorio según la rúbrica, traducido al idioma del usuario
+        refusal_msg = "I’m sorry, but I do not have any additional specific articles in the current corpus on this topic."
+        if user_lang_code != 'en':
+            refusal_msg = GoogleTranslator(source='en', target=user_lang_code).translate(refusal_msg)
+        
         return {
-            "answer": "Lo siento, no he encontrado artículos suficientemente relevantes.",
+            "answer": refusal_msg,
             "articles": [],
-            "language": "es"
+            "language": user_lang_code
         }
 
-    # 3. Generación con LLM
-    language = detect_language(request.query)
+    # 4. GENERACIÓN CON LLAMA (Explicándole el idioma de respuesta)
     context = ""
     for i, doc in enumerate(retrieved_docs, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
-    prompt = build_comparison_prompt(request.query, context, language)
+    # Modificamos el system_prompt para forzar el idioma
+    system_instruction = f"""You are a professional academic assistant. 
+    You MUST answer in {target_language_name}. 
+    Compare the user's research direction with the provided articles.
+    Keep original article titles in English."""
+
+    prompt = build_comparison_prompt(request.query, context, target_language_name)
     
-    # Respuesta real del cerebro UC3M
     llm_response = client.chat(
         user_prompt=prompt,
-        system_prompt="You are a precise academic comparison assistant.",
+        system_prompt=system_instruction,
     )
 
-    # 4. Formatear artículos para el frontend con datos reales
+    # 5. FORMATEO PARA FRONTEND
+    articles_for_frontend = []
     for doc in retrieved_docs:
         articles_for_frontend.append({
             "title": doc["title"],
-            "authors": doc["authors"], # O mapear desde metadatos
+            "authors": doc["authors"],
             "year": doc['year'],
             "url": "#",
             "relevanceScore": round(doc["score"] * 100, 1),
@@ -102,5 +162,5 @@ async def search_endpoint(request: SearchRequest):
     return {
         "answer": llm_response,
         "articles": articles_for_frontend,
-        "language": language
+        "language": user_lang_code
     }
