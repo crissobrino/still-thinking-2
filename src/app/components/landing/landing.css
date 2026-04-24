@@ -1,0 +1,9 @@
+.splash-container {
+  background-color: #f3f4f6; /* El color de tus mensajes */
+  animation: fadeIn 1.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

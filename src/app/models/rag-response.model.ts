@@ -2,10 +2,14 @@ export interface Article {
   title: string;
   authors: string;
   year?: number;
+  abstract?: string;
   url?: string;
   relevanceScore?: number; // El que usas en el HTML
   score?: number;          // El que parece enviar el backend
   keyDifference?: string;
+
+  summary?: string;
+  loadingSummary?: boolean;
 }
 
 export interface RagResponse {

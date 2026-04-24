@@ -154,9 +154,9 @@ async def search_endpoint(request: SearchRequest):
             "title": doc["title"],
             "authors": doc["authors"],
             "year": doc['year'],
-            "url": "#",
+            "abstract": doc["abstract"],  # <--- ¡ESTA LÍNEA ES CRUCIAL!
             "relevanceScore": round(doc["score"] * 100, 1),
-            "keyDifference": "Analizado en la respuesta principal." 
+            "keyDifference": "..." 
         })
 
     return {
@@ -164,3 +164,14 @@ async def search_endpoint(request: SearchRequest):
         "articles": articles_for_frontend,
         "language": user_lang_code
     }
+
+class SummarizeRequest(BaseModel):
+    abstract: str
+    query: str
+    language: str = "Spanish"
+
+@app.post("/summarize")
+async def summarize_endpoint(request: SummarizeRequest):
+    prompt = f"Summarize this abstract in relation to '{request.query}' in {request.language}: {request.abstract}"
+    summary = client.chat(user_prompt=prompt, system_prompt="Academic summarizer")
+    return {"summary": summary}

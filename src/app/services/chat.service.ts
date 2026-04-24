@@ -7,14 +7,22 @@ import { RagResponse } from '../models/rag-response.model';
   providedIn: 'root'
 })
 export class ChatService {
-  // FastAPI default URL is 8000. Use /search as defined in your main.py
-  private API_URL = 'http://localhost:8000/search';
+  // Definimos la base para que sea más fácil añadir endpoints
+  private baseUrl = 'http://localhost:8000';
 
   constructor(private http: HttpClient) {}
 
-  // This replaces your mock logic
   getQueryResponse(query: string): Observable<RagResponse> {
-    // We send { query: query } to match your SearchRequest BaseModel in Python
-    return this.http.post<RagResponse>(this.API_URL, { query: query });
+    // Apunta a http://localhost:8000/search
+    return this.http.post<RagResponse>(`${this.baseUrl}/search`, { query: query });
+  }
+
+  getSummary(abstract: string, query: string, lang: string): Observable<{summary: string}> {
+    // Apunta a http://localhost:8000/summarize
+    return this.http.post<{summary: string}>(`${this.baseUrl}/summarize`, {
+      abstract,
+      query,
+      language: lang === 'es' ? 'Spanish' : 'English'
+    });
   }
 }

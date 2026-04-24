@@ -9,7 +9,12 @@
         <div [ngClass]="msg.isUser ? 'justify-end' : 'justify-start'" class="flex">
           <div [ngClass]="msg.isUser ? 'bg-indigo-600 text-white rounded-l-lg rounded-tr-lg' : 'bg-white text-gray-800 border rounded-r-lg rounded-tl-lg'" 
                class="max-w-[80%] p-3 shadow-sm">
-            <p class="text-sm whitespace-pre-wrap">{{ msg.text }}</p>
+            
+            @if (!msg.isUser) {
+              <div class="text-sm leading-relaxed" [innerHTML]="msg.text"></div>
+            } @else {
+              <p class="text-sm whitespace-pre-wrap">{{ msg.text }}</p>
+            }
           </div>
         </div>
       }
@@ -59,12 +64,25 @@
             {{ article.authors }} @if(article.year){ ({{ article.year }}) }
           </p>
           
-          <button class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium mb-2 flex items-center gap-1 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Ver resumen del paper
+          <button (click)="viewSummary(article)" 
+                  [disabled]="$any(article).loadingSummary"
+                  class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium mb-2 flex items-center gap-1 transition-colors">
+            
+            @if ($any(article).loadingSummary) {
+              <span class="animate-spin">⏳</span> Generando...
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              {{ $any(article).summary ? 'Resumen listo' : 'Ver resumen del paper' }}
+            }
           </button>
+
+          @if ($any(article).summary) {
+            <div class="text-[10px] bg-indigo-50 p-2 rounded mb-2 border border-indigo-100 text-gray-700 animate-fade-in">
+              <p><strong>Resumen:</strong> {{ $any(article).summary }}</p>
+            </div>
+          }
           
           @if (article.keyDifference) {
             <div class="text-[10px] bg-amber-50 p-2 rounded border-l-2 border-amber-400 italic text-gray-700">
