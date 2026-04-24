@@ -82,8 +82,13 @@ export class ChatComponent {
     this.chatService.getSummary(article.abstract, this.lastQuery, this.currentResponse?.language || 'en')
       .subscribe({
         next: (res) => {
-          console.log("Resumen recibido:", res.summary);
-          article.summary = res.summary;
+          console.log("Resumen recibido en crudo:", res.summary);
+          
+          // LA ASPIRADORA DE PENSAMIENTOS PARA EL RESUMEN
+          let cleanSummary = res.summary || "";
+          cleanSummary = cleanSummary.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+          
+          article.summary = cleanSummary; // Guardamos el texto ya limpio
           article.loadingSummary = false;
           this.cdr.detectChanges();
         },
