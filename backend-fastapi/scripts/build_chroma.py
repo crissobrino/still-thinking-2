@@ -1,10 +1,12 @@
 import pandas as pd
 import chromadb
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-INPUT_PATH = "backend-fastapi/data/papers_filtered.jsonl"
+INPUT_PATH = "backend-fastapi/papers_filtered.jsonl"
 CHROMA_PATH = "backend-fastapi/chroma_db"
 COLLECTION_NAME = "papers"
-BATCH_SIZE = 500
+BATCH_SIZE = 1000
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
 
 def format_authors(authors):
@@ -58,6 +60,8 @@ def main():
         for _, row in df.iterrows()
     ]
 
+    ef = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL, device="cuda")
+
     client = chromadb.PersistentClient(path=CHROMA_PATH)
 
     # Recreate collection from scratch
@@ -67,7 +71,7 @@ def main():
     except Exception:
         print(f"No existing collection to delete: {COLLECTION_NAME}")
 
-    collection = client.get_or_create_collection(name=COLLECTION_NAME)
+    collection = client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=ef)
 
     # Insert in batches
     total = len(ids)
