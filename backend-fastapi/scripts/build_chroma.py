@@ -1,7 +1,7 @@
 import pandas as pd
 import chromadb
 
-INPUT_PATH = "backend-fastapi/data/papers_filtered.jsonl"
+INPUT_PATH = "backend-fastapi/papers_filtered.jsonl"
 CHROMA_PATH = "backend-fastapi/chroma_db"
 COLLECTION_NAME = "papers"
 BATCH_SIZE = 500

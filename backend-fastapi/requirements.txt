@@ -5,3 +5,5 @@ sentence-transformers
 onnxruntime
 numpy
 pydantic
+langid
+deep-translator
