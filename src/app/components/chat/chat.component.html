@@ -64,23 +64,39 @@
             {{ article.authors }} @if(article.year){ ({{ article.year }}) }
           </p>
           
-          <button (click)="viewSummary(article)" 
-                  [disabled]="$any(article).loadingSummary"
-                  class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium mb-2 flex items-center gap-1 transition-colors">
-            
-            @if ($any(article).loadingSummary) {
-              <span class="animate-spin">⏳</span> Generando...
-            } @else {
+          <div class="flex gap-2 mb-2">
+            <button (click)="viewSummary(article)" 
+                    [disabled]="$any(article).loadingSummary"
+                    class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors">
+              @if ($any(article).loadingSummary) {
+                <span class="animate-spin">⏳</span> Generando...
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {{ $any(article).summary ? 'Resumen listo' : 'Ver resumen' }}
+              }
+            </button>
+
+            <button (click)="toggleAbstract(article)" 
+                    class="text-[10px] text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              {{ $any(article).summary ? 'Resumen listo' : 'Ver resumen del paper' }}
-            }
-          </button>
+              {{ $any(article).showAbstract ? 'Ocultar abstract' : 'Ver abstract' }}
+            </button>
+          </div>
+
+          @if ($any(article).showAbstract) {
+            <div class="text-[10px] bg-gray-50 p-2 rounded mb-2 border border-gray-200 text-gray-600 max-h-40 overflow-y-auto animate-fade-in text-justify">
+              <p><strong>Abstract Original:</strong> {{ article.abstract }}</p>
+            </div>
+          }
 
           @if ($any(article).summary) {
             <div class="text-[10px] bg-indigo-50 p-2 rounded mb-2 border border-indigo-100 text-gray-700 animate-fade-in">
-              <p><strong>Resumen:</strong> {{ $any(article).summary }}</p>
+              <p><strong>Resumen IA:</strong> {{ $any(article).summary }}</p>
             </div>
           }
           

@@ -99,4 +99,8 @@ export class ChatComponent {
         }
       });
   }
+  // NUEVO MÉTODO PARA MOSTRAR/OCULTAR EL ABSTRACT
+  toggleAbstract(article: any) {
+    article.showAbstract = !article.showAbstract;
+  }
 }
