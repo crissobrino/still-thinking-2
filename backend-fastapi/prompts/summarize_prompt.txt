@@ -1,0 +1,7 @@
+Summarize the following abstract in relation to the research query below.
+Be concise (2-3 sentences). Focus only on what is directly relevant to the query.
+Respond in {language}.
+
+Query: {query}
+
+Abstract: {abstract}

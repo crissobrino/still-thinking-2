@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from scripts.search_chroma import search
 from llm.client import UC3MClient
 from llm.language import detect_language
-from llm.prompts import build_comparison_prompt
+from llm.prompts import build_comparison_prompt, build_system_prompt, build_summarize_prompt
 from llm.guardrails import should_refuse
 import langid
 from deep_translator import GoogleTranslator
@@ -134,14 +134,9 @@ async def search_endpoint(request: SearchRequest):
     for i, doc in enumerate(retrieved_docs, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
-    # Modificamos el system_prompt para forzar el idioma
-    system_instruction = f"""You are a professional academic assistant. 
-    You MUST answer in {target_language_name}. 
-    Compare the user's research direction with the provided articles.
-    Keep original article titles in English."""
-
     prompt = build_comparison_prompt(request.query, context, target_language_name)
-    
+    system_instruction = build_system_prompt(target_language_name)
+
     llm_response = client.chat(
         user_prompt=prompt,
         system_prompt=system_instruction,
@@ -172,6 +167,6 @@ class SummarizeRequest(BaseModel):
 
 @app.post("/summarize")
 async def summarize_endpoint(request: SummarizeRequest):
-    prompt = f"Summarize this abstract in relation to '{request.query}' in {request.language}: {request.abstract}"
-    summary = client.chat(user_prompt=prompt, system_prompt="Academic summarizer")
+    prompt = build_summarize_prompt(request.query, request.abstract, request.language)
+    summary = client.chat(user_prompt=prompt, system_prompt="You are a concise academic summarizer.")
     return {"summary": summary}
