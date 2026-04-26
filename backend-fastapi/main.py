@@ -11,6 +11,7 @@ from llm.prompts import build_comparison_prompt, build_system_prompt, build_summ
 from llm.guardrails import should_refuse
 import langid
 from deep_translator import GoogleTranslator
+from contextlib import asynccontextmanager
 
 def call_llama_uc3m(original_query, context_en, lang_code):
     # Mapeo de códigos a nombres para el modelo
@@ -73,6 +74,45 @@ client = UC3MClient()
 
 from deep_translator import GoogleTranslator
 from llm.language import detect_language, get_language_name
+
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 Cargando modelos y base de datos... Por favor, espera.")
+    # Forzamos una búsqueda vacía o simplemente inicializamos el cliente
+    # Esto descargará el modelo de HuggingFace SI NO ESTÁ ya descargado
+    # y lo subirá a la RAM.
+    try:
+        search("warmup", k=1)
+        print("System ready. Models loaded in RAM.")
+    except Exception as e:
+        print(f" Error during pre-load: {e}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- CÓDIGO DE STARTUP ---
+    print(" Iniciando Warm-up del sistema...")
+    
+    # 1. Cargar el modelo de Embeddings (Chroma)
+    # Esto descargará/cargará all-MiniLM-L6-v2 antes de que el usuario entre
+    try:
+        search("warmup query", k=1)
+        print(" Modelo de Embeddings cargado.")
+    except Exception as e:
+        print(f" Error cargando embeddings: {e}")
+
+    # 2. Opcional: Warm-up del LLM (UC3MClient)
+    # Las conexiones HTTPS iniciales suelen ser lentas. 
+    # Puedes hacer una llamada mínima para "despertar" la conexión.
+    try:
+        client.chat("ping") 
+        print(" Conexión con LLM establecida.")
+    except: pass
+
+    yield
+    # --- CÓDIGO DE SHUTDOWN (Si fuera necesario) ---
+    print("👋 Cerrando servidor...")
+
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
