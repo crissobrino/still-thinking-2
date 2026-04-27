@@ -112,7 +112,7 @@ async def lifespan(app: FastAPI):
     # --- CÓDIGO DE SHUTDOWN (Si fuera necesario) ---
     print("👋 Cerrando servidor...")
 
-app = FastAPI(lifespan=lifespan)
+#app = FastAPI(lifespan=lifespan)
 
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
