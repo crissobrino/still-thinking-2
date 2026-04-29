@@ -2,7 +2,7 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
-import { RagResponse } from '../../models/rag-response.model';
+import { RagResponse, Article } from '../../models/rag-response.model';
 
 @Component({
   selector: 'app-chat',
@@ -17,6 +17,7 @@ export class ChatComponent {
   messages: { text: string, isUser: boolean }[] = [];
   currentResponse?: RagResponse;
   isLoading = false;
+  isEvalMode = false; 
 
   constructor(
     private chatService: ChatService,
@@ -26,30 +27,32 @@ export class ChatComponent {
   onSendMessage() {
     if (!this.userInput.trim() || this.isLoading) return;
 
-    this.lastQuery = this.userInput; // <--- GUARDAMOS LA QUERY
     const savedQuery = this.userInput;
+    this.lastQuery = savedQuery;
     this.messages.push({ text: savedQuery, isUser: true });
     this.userInput = ''; 
     this.isLoading = true; 
 
-    this.chatService.getQueryResponse(savedQuery).subscribe({
-      next: (response) => {
+    // Asegúrate de que tu ChatService acepte (query, k, evalMode)
+    this.chatService.getQueryResponse(savedQuery, 5, this.isEvalMode).subscribe({
+      next: (response: RagResponse) => {
         try {
           let botText = response.answer || "";
           botText = botText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
-          // Procesamiento de artículos (Score y Diferencias)
-          if (response.articles) {
-            response.articles.forEach(article => {
-              let rawScore = article.score || article.relevanceScore || 0;
-              article.relevanceScore = rawScore > 1 ? rawScore : rawScore * 100;
-
-              const safeTitle = article.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const regex = new RegExp(`${safeTitle}[^—\\-]*[—\\-]\\s*(.*?)(?:\\n|$)`, 'i');
-              const match = botText.match(regex);
-              if (match) article.keyDifference = match[1].trim();
-            });
+          // 1. Procesar scores de ambas listas
+          this.processArticleScores(response.articles);
+          if (response.enn_articles) {
+            this.processArticleScores(response.enn_articles);
           }
+
+          // 2. Extraer diferencias clave del texto del bot (solo para ANN)
+          response.articles.forEach(article => {
+            const safeTitle = article.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`${safeTitle}[^—\\-]*[—\\-]\\s*(.*?)(?:\\n|$)`, 'i');
+            const match = botText.match(regex);
+            if (match) article.keyDifference = match[1].trim();
+          });
 
           this.currentResponse = response;
           this.messages.push({ text: botText, isUser: false });
@@ -66,41 +69,29 @@ export class ChatComponent {
     });
   }
 
-  viewSummary(article: any) {
-    console.log("Botón clicado para el artículo:", article.title);
-    
-    if (!article.abstract) {
-      console.error("ERROR: El artículo no tiene 'abstract'. Revisa el backend.");
-      return;
-    }
+  // Método privado corregido con el tipo Article[]
+  private processArticleScores(articles: Article[]) {
+    articles.forEach(art => {
+      let rawScore = art.score || art.relevanceScore || 0;
+      art.relevanceScore = rawScore > 1 ? rawScore : rawScore * 100;
+    });
+  }
 
-    if (article.summary) return;
-
+  // Métodos auxiliares se mantienen igual...
+  viewSummary(article: Article) {
+    if (!article.abstract || article.summary) return;
     article.loadingSummary = true;
-    console.log("Enviando a resumir:", { q: this.lastQuery, abs: article.abstract.substring(0, 50) + "..." });
-    
     this.chatService.getSummary(article.abstract, this.lastQuery, this.currentResponse?.language || 'en')
       .subscribe({
         next: (res) => {
-          console.log("Resumen recibido en crudo:", res.summary);
-          
-          // LA ASPIRADORA DE PENSAMIENTOS PARA EL RESUMEN
-          let cleanSummary = res.summary || "";
-          cleanSummary = cleanSummary.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-          
-          article.summary = cleanSummary; // Guardamos el texto ya limpio
-          article.loadingSummary = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error("Error en la petición de resumen:", err);
+          article.summary = res.summary.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
           article.loadingSummary = false;
           this.cdr.detectChanges();
         }
       });
   }
-  // NUEVO MÉTODO PARA MOSTRAR/OCULTAR EL ABSTRACT
-  toggleAbstract(article: any) {
+
+  toggleAbstract(article: Article) {
     article.showAbstract = !article.showAbstract;
   }
 }

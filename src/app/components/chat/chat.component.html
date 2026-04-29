@@ -1,15 +1,19 @@
-<div class="flex h-screen bg-gray-50">
-  <div class="flex-1 flex flex-col border-r border-gray-200">
-    <div class="p-4 bg-white border-b font-bold text-lg text-indigo-700">
-      Research Assistant AI
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+  <div class="flex-1 flex flex-col border-r border-gray-200 bg-white">
+    <div class="p-4 bg-white border-b flex justify-between items-center">
+      <span class="font-bold text-lg text-indigo-700">Research Assistant AI</span>
+      
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-gray-500 font-medium">Modo Evaluación (ENN)</span>
+        <input type="checkbox" [(ngModel)]="isEvalMode" class="cursor-pointer w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+      </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
       @for (msg of messages; track $index) {
         <div [ngClass]="msg.isUser ? 'justify-end' : 'justify-start'" class="flex">
           <div [ngClass]="msg.isUser ? 'bg-indigo-600 text-white rounded-l-lg rounded-tr-lg' : 'bg-white text-gray-800 border rounded-r-lg rounded-tl-lg'" 
                class="max-w-[80%] p-3 shadow-sm">
-            
             @if (!msg.isUser) {
               <div class="text-sm leading-relaxed" [innerHTML]="msg.text"></div>
             } @else {
@@ -30,91 +34,102 @@
 
     <div class="p-4 bg-white border-t">
       <div class="flex gap-2">
-        <input id="userInput" 
-               name="userInput" 
-               [(ngModel)]="userInput" 
-               (keyup.enter)="onSendMessage()" 
-               [disabled]="isLoading"
+        <input id="userInput" name="userInput" [(ngModel)]="userInput" 
+               (keyup.enter)="onSendMessage()" [disabled]="isLoading"
                placeholder="Pregunta sobre artículos de investigación..."
                class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100">
-        <button (click)="onSendMessage()" 
-                [disabled]="isLoading"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300">
+        <button (click)="onSendMessage()" [disabled]="isLoading"
+                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors">
           {{ isLoading ? '...' : 'Enviar' }}
         </button>
       </div>
     </div>
   </div>
 
-  <div class="w-80 bg-gray-100 p-4 overflow-y-auto hidden md:block">
-    <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
-      📚 Artículos Relevantes
-    </h3>
-
-    @if (currentResponse && currentResponse.articles && currentResponse.articles.length > 0) {
-      @for (article of currentResponse.articles; track $index) {
-        <div class="bg-white p-3 rounded-lg shadow-sm border mb-3 relative">
-          
-          <span class="absolute -top-2 -right-2 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200">
-            {{ article.relevanceScore | number:'1.1-1' }}% match
+  <div [ngClass]="isEvalMode ? 'w-[750px]' : 'w-85'" 
+       class="bg-gray-100 p-4 overflow-y-auto hidden md:flex gap-4 transition-all duration-300 border-l border-gray-200">
+    
+    <div class="flex-1 min-w-[300px]">
+      <h3 class="font-bold text-gray-700 mb-3 text-sm flex justify-between items-center">
+        <span>📚 ANN (Búsqueda HNSW)</span>
+        @if (currentResponse?.metrics?.ann_time) {
+          <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+            {{ currentResponse?.metrics?.ann_time }}ms
           </span>
+        }
+      </h3>
+      
+      <ng-container *ngTemplateOutlet="articleList; context: { articles: currentResponse?.articles }"></ng-container>
+    </div>
 
-          <h4 class="text-xs font-bold text-indigo-900 leading-tight mb-1">{{ article.title }}</h4>
-          <p class="text-[10px] text-gray-500 mb-2">
-            {{ article.authors }} @if(article.year){ ({{ article.year }}) }
-          </p>
-          
-          <div class="flex gap-2 mb-2">
-            <button (click)="viewSummary(article)" 
-                    [disabled]="$any(article).loadingSummary"
-                    class="text-[10px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors">
-              @if ($any(article).loadingSummary) {
-                <span class="animate-spin">⏳</span> Generando...
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                {{ $any(article).summary ? 'Resumen listo' : 'Ver resumen' }}
-              }
-            </button>
+    <div *ngIf="isEvalMode" class="flex-1 min-w-[300px] border-l pl-4 border-gray-300 animate-fade-in">
+      <h3 class="font-bold text-gray-700 mb-2 text-sm flex justify-between items-center">
+        <span>🎯 ENN (Búsqueda Exacta)</span>
+        @if (currentResponse?.metrics?.enn_time) {
+          <span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">
+            {{ currentResponse?.metrics?.enn_time }}ms
+          </span>
+        }
+      </h3>
 
-            <button (click)="toggleAbstract(article)" 
-                    class="text-[10px] text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              {{ $any(article).showAbstract ? 'Ocultar abstract' : 'Ver abstract' }}
-            </button>
-          </div>
-
-          @if ($any(article).showAbstract) {
-            <div class="text-[10px] bg-gray-50 p-2 rounded mb-2 border border-gray-200 text-gray-600 max-h-40 overflow-y-auto animate-fade-in text-justify">
-              <p><strong>Abstract Original:</strong> {{ article.abstract }}</p>
-            </div>
-          }
-
-          @if ($any(article).summary) {
-            <div class="text-[10px] bg-indigo-50 p-2 rounded mb-2 border border-indigo-100 text-gray-700 animate-fade-in">
-              <p><strong>Resumen IA:</strong> {{ $any(article).summary }}</p>
-            </div>
-          }
-          
-          @if (article.keyDifference) {
-            <div class="text-[10px] bg-amber-50 p-2 rounded border-l-2 border-amber-400 italic text-gray-700">
-               {{ article.keyDifference }}
-            </div>
-          }
+      @if (currentResponse?.metrics?.recall !== undefined) {
+        <div class="mb-3 text-[11px] font-bold text-amber-700 bg-amber-50 p-2 rounded border border-amber-100">
+          Métrica Recall @K: {{ currentResponse?.metrics?.recall | percent:'1.0-1' }}
         </div>
       }
-    } @else {
-      <div class="text-xs text-gray-400 text-center mt-10">
-        @if (isLoading) {
-          <p class="animate-bounce">Buscando fuentes...</p>
-        } @else {
-          <p>No hay artículos para mostrar.</p>
+
+      <ng-container *ngTemplateOutlet="articleList; context: { articles: currentResponse?.enn_articles }"></ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #articleList let-articles="articles">
+  @if (articles && articles.length > 0) {
+    @for (article of articles; track $index) {
+      <div class="bg-white p-3 rounded-lg shadow-sm border mb-3 relative group hover:border-indigo-300 transition-all">
+        <span class="absolute -top-2 -right-2 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200 shadow-sm">
+          {{ article.relevanceScore | number:'1.1-1' }}% match
+        </span>
+
+        <h4 class="text-xs font-bold text-indigo-900 leading-tight mb-1">{{ article.title }}</h4>
+        <p class="text-[10px] text-gray-500 mb-2">
+          {{ article.authors }} @if(article.year){ ({{ article.year }}) }
+        </p>
+        
+        <div class="flex gap-3 mb-2">
+          <button (click)="viewSummary(article)" 
+                  [disabled]="article.loadingSummary"
+                  class="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2-2z" /></svg>
+            {{ article.summary ? 'Resumen listo' : 'IA Summary' }}
+          </button>
+
+          <button (click)="toggleAbstract(article)" 
+                  class="text-[10px] text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1">
+            {{ article.showAbstract ? 'Ocultar info' : 'Ver abstract' }}
+          </button>
+        </div>
+
+        @if (article.showAbstract) {
+          <div class="text-[10px] bg-gray-50 p-2 rounded mb-2 border border-gray-200 text-gray-600 max-h-40 overflow-y-auto animate-fade-in text-justify">
+            {{ article.abstract }}
+          </div>
+        }
+
+        @if (article.summary) {
+          <div class="text-[10px] bg-indigo-50 p-2 rounded mb-2 border border-indigo-100 text-gray-700 animate-fade-in">
+            <strong>IA Summary:</strong> {{ article.summary }}
+          </div>
+        }
+        
+        @if (article.keyDifference && !isEvalMode) {
+          <div class="text-[10px] bg-amber-50 p-2 rounded border-l-2 border-amber-400 italic text-gray-700">
+             {{ article.keyDifference }}
+          </div>
         }
       </div>
     }
-  </div>
-</div>
+  } @else if (!isLoading) {
+    <p class="text-[11px] text-gray-400 text-center py-10">No hay artículos cargados.</p>
+  }
+</ng-template>

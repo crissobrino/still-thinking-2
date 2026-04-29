@@ -2,3 +2,22 @@
   white-space: pre-wrap; /* Esto hará que los saltos de línea del LLM se vean bien */
   word-wrap: break-word;
 }
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Ajuste para que los badges no se solapen */
+.recall-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #fff3e0;
+  color: #ef6c00;
+  border-radius: 10px;
+  font-size: 9px;
+}

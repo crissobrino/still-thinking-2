@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from chromadb import PersistentClient
+import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
@@ -8,6 +9,71 @@ CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
 client = PersistentClient(path=CHROMA_PATH)
 collection = client.get_collection("papers")
 
+def search_ann(query_text: str, k: int = 5):
+    """Búsqueda estándar de Chroma (usa HNSW/ANN)"""
+    return collection.query(
+        query_texts=[query_text],
+        n_results=k,
+        include=["documents", "metadatas", "distances"]
+    )
+
+def search_enn(query_text: str, k: int = 5):
+    """Búsqueda Exacta (Fuerza Bruta) obteniendo textos y metadatos"""
+    
+    all_embeddings = []
+    all_ids = []
+    all_documents = []
+    all_metadatas = []
+    
+    offset = 0
+    batch_size = 5000  # Lote seguro para no saturar SQLite
+    
+    # 1. Extraemos los datos por lotes
+    while True:
+        batch = collection.get(
+            include=['embeddings', 'documents', 'metadatas'],
+            limit=batch_size,
+            offset=offset
+        )
+        
+        # Si ya no hay IDs, hemos terminado de leer la base de datos
+        if not batch['ids']:
+            break
+            
+        all_ids.extend(batch['ids'])
+        all_embeddings.extend(batch['embeddings'])
+        
+        # Aseguramos que no sean nulos
+        docs = batch.get('documents') or []
+        metas = batch.get('metadatas') or []
+        all_documents.extend(docs)
+        all_metadatas.extend(metas)
+        
+        offset += batch_size
+
+    # 2. Convertimos todo a arrays de Numpy
+    np_embeddings = np.array(all_embeddings)
+    np_ids = np.array(all_ids)
+    np_documents = np.array(all_documents, dtype=object)
+    np_metadatas = np.array(all_metadatas, dtype=object)
+    
+    # 3. Obtenemos el vector de la query
+    query_res = collection.query(query_texts=[query_text], n_results=1, include=['embeddings'])
+    query_vec = np.array(query_res['embeddings'][0])
+
+    # 4. Cálculo de distancia L2 manual (ENN)
+    distances = np.linalg.norm(np_embeddings - query_vec, axis=1)
+    
+    # 5. Obtenemos los índices de los 'k' más cercanos
+    idx_sorted = np.argsort(distances)[:k]
+    
+    # Devolvemos la estructura exacta que espera el main.py
+    return {
+        "ids": [np_ids[idx_sorted].tolist()],
+        "distances": [distances[idx_sorted].tolist()],
+        "documents": [np_documents[idx_sorted].tolist()],
+        "metadatas": [np_metadatas[idx_sorted].tolist()]
+    }
 
 def search(query: str, k: int = 5):
     results = collection.query(

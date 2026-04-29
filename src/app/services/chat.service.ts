@@ -12,9 +12,12 @@ export class ChatService {
 
   constructor(private http: HttpClient) {}
 
-  getQueryResponse(query: string): Observable<RagResponse> {
-    // Apunta a http://localhost:8000/search
-    return this.http.post<RagResponse>(`${this.baseUrl}/search`, { query: query });
+  getQueryResponse(query: string, k: number = 5, evalMode: boolean = false): Observable<RagResponse> {
+    return this.http.post<RagResponse>(`${this.baseUrl}/search`, { 
+      query, 
+      k, 
+      eval_mode: evalMode // Asegúrate de que el nombre coincida con el del backend
+    });
   }
 
   getSummary(abstract: string, query: string, lang: string): Observable<{summary: string}> {
