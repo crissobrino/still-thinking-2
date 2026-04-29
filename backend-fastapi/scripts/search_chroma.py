@@ -56,12 +56,13 @@ def search_enn(query_text: str, k: int = 5):
     np_ids = np.array(all_ids)
     np_documents = np.array(all_documents, dtype=object)
     np_metadatas = np.array(all_metadatas, dtype=object)
-    
-    # 3. Obtenemos el vector de la query
-    query_res = collection.query(query_texts=[query_text], n_results=1, include=['embeddings'])
-    query_vec = np.array(query_res['embeddings'][0])
 
-    # 4. Cálculo de distancia L2 manual (ENN)
+    embedding_function = collection._embedding_function
+    query_embeddings = embedding_function([query_text])
+    query_vec = np.array(query_embeddings[0])
+
+    
+   # 4. Cálculo de distancia L2 manual (ENN)
     distances = np.linalg.norm(np_embeddings - query_vec, axis=1)
     
     # 5. Obtenemos los índices de los 'k' más cercanos
