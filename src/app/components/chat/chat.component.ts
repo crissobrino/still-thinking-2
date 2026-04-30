@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { RagResponse, Article } from '../../models/rag-response.model';
-
+import { ThemeService } from '../../services/theme.service';
+import { LanguageService } from '../../../services/language.service';
 @Component({
   selector: 'app-chat',
   standalone: true, // <--- ESTO ES LO QUE ARREGLA EL ERROR NG2012
@@ -21,7 +22,9 @@ export class ChatComponent {
 
   constructor(
     private chatService: ChatService,
-    private cdr: ChangeDetectorRef 
+    public lang: LanguageService,
+    private cdr: ChangeDetectorRef,
+    public theme: ThemeService 
   ) {}
 
   onSendMessage() {

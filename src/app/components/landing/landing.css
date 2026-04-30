@@ -1,9 +1,32 @@
-.splash-container {
-  background-color: #f3f4f6; /* El color de tus mensajes */
-  animation: fadeIn 1.5s ease-in;
+/* landing.css */
+
+/* Animación de entrada suave */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Animación del icono flotante */
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-bounce-slow {
+  display: inline-block;
+  animation: bounceSlow 3s infinite ease-in-out;
 }

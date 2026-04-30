@@ -1,0 +1,42 @@
+<div class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 transition-colors duration-500">
+  
+  <button (click)="theme.toggleDarkMode()" class="absolute top-6 right-6 p-3 rounded-2xl bg-white/80 dark:bg-slate-800 shadow-xl border border-white dark:border-slate-700 hover:scale-110 transition-all text-2xl">
+    {{ theme.darkMode() ? '☀️' : '🌙' }}
+  </button>
+
+  <div class="text-center p-10 backdrop-blur-md bg-white/40 dark:bg-slate-900/40 rounded-[40px] border border-white/50 dark:border-slate-700 shadow-2xl max-w-md w-full animate-fade-in">
+    
+    <div class="mb-8 flex justify-center animate-bounce-slow">
+      <div class="p-6 rounded-3xl bg-indigo-600 shadow-2xl shadow-indigo-500/40">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="text-4xl font-black text-slate-900 dark:text-slate-50 mb-3">
+      {{ lang.translate('title') }}
+    </h1>
+    <p class="text-slate-600 dark:text-slate-300 mb-10 font-medium">
+      {{ lang.translate('subtitle') }}
+    </p>
+
+    <div class="flex flex-col gap-4">
+      <button (click)="start()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-300 dark:shadow-none transform hover:-translate-y-1 transition-all">
+        🚀 {{ lang.translate('startBtn') }}
+      </button>
+
+      <div class="flex gap-2">
+        @for (l of languages; track l) {
+          <button (click)="lang.setLanguage(l)" 
+            [class.bg-indigo-600]="lang.currentLang() === l"
+            [class.text-white]="lang.currentLang() === l"
+            [class.dark:bg-indigo-500]="lang.currentLang() === l"
+            class="flex-1 py-2 text-xs font-bold border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 uppercase transition-all">
+            {{ l }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
