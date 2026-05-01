@@ -1,0 +1,48 @@
+.metrics-panel {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  font-family: monospace; /* Da un toque más técnico */
+  color: #333;
+}
+
+.metrics-panel h4 {
+  margin-top: 0;
+  color: #495057;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.metrics-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.metrics-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px dashed #e9ecef;
+}
+
+.metrics-list .highlight {
+  color: #0056b3;
+  background-color: #e7f1ff;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.total-time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  padding-top: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-top: 2px solid #adb5bd;
+  color: #212529;
+}

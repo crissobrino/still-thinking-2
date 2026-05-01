@@ -2,12 +2,33 @@ import os
 from pathlib import Path
 from chromadb import PersistentClient
 import numpy as np
+from chromadb.utils import embedding_functions
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
 
+# Usamos el modelo por defecto de Chroma, pero lo forzamos a la gráfica
+try:
+    gpu_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2",
+        device="cuda" # <--- ¡AQUÍ ESTÁ LA MAGIA DE LA GPU!
+    )
+    print("Modelo de Embeddings cargado en la GPU (CUDA).")
+except Exception as e:
+    print(f"Aviso: No se pudo usar CUDA, cayendo a CPU. Error: {e}")
+    # Fallback a CPU por si la GPU de la UC3M está saturada por otros alumnos
+    gpu_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2",
+        device="cpu" 
+    )
+
 client = PersistentClient(path=CHROMA_PATH)
-collection = client.get_collection("papers")
+
+# 👇 3. INYECTAR LA FUNCIÓN EN LA COLECCIÓN 👇
+collection = client.get_collection(
+    name="papers", 
+    embedding_function=gpu_embedding_function
+)
 
 def search_ann(query_text: str, k: int = 5):
     """Búsqueda estándar de Chroma (usa HNSW/ANN)"""

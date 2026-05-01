@@ -83,6 +83,7 @@ def process_results(results):
 
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
+    t_start = time.perf_counter()
     # 1. Idioma y Traducción
     user_lang_code = detect_language(request.query)
     target_language_name = get_language_name(user_lang_code)
@@ -142,6 +143,9 @@ async def search_endpoint(request: SearchRequest):
 
     prompt = build_comparison_prompt(request.query, context, target_language_name)
     llm_res = client.chat(user_prompt=prompt, system_prompt=build_system_prompt(target_language_name))
+
+    total_time = (time.perf_counter() - t_start) * 1000
+    metrics["total_time"] = round(total_time, 2)
 
     return {
         "answer": llm_res,
