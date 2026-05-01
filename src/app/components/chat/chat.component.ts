@@ -35,6 +35,8 @@ export class ChatComponent {
     this.router.navigate(['/']);
   }
 
+  
+
   onSendMessage() {
     if (!this.userInput.trim() || this.isLoading) return;
 
