@@ -74,8 +74,8 @@
                [placeholder]="lang.translate('placeholder')"
                class="flex-1 border dark:border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 dark:bg-slate-800">
         <button (click)="onSendMessage()" [disabled]="isLoading"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors font-bold">
-          {{ isLoading ? '...' : lang.translate('send') }}
+                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 transition-colors font-bold flex items-center justify-center gap-2">
+          <span>{{ isLoading ? '...' : lang.translate('send') }}</span>
         </button>
       </div>
     </div>
@@ -87,7 +87,10 @@
     @if (currentResponse?.metrics?.total_time) {
       <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg p-3 flex flex-wrap justify-between items-center text-xs shadow-sm animate-fade-in">
         <span class="font-bold text-gray-600 dark:text-slate-300 flex items-center gap-2">
-          ⏱️ Rendimiento Global
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          Rendimiento Global
         </span>
         <div class="flex gap-3 mt-2 md:mt-0">
            <span class="px-2 py-1 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded text-gray-600 dark:text-slate-400">
@@ -99,8 +102,11 @@
         </div>
       </div>
 
-      <button (click)="openGraphModal()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold transition-all shadow-md animate-fade-in">
-        👁️ VER MAPA VISUAL DE RELACIONES
+      <button (click)="openGraphModal()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold transition-all shadow-md animate-fade-in flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+        </svg>
+        VER MAPA VISUAL DE RELACIONES
       </button>
     }
 
@@ -145,7 +151,12 @@
   <div *ngIf="showGraph" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white dark:bg-slate-900 w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
       <div class="p-4 border-b dark:border-slate-800 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20">
-        <h3 class="font-bold text-indigo-900 dark:text-indigo-300">Mapa de Relevancia (Query vs Papers)</h3>
+        <h3 class="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+          </svg>
+          Mapa de Relevancia (Query vs Papers)
+        </h3>
         <button (click)="showGraph = false" class="text-gray-500 hover:text-red-500 text-2xl font-bold transition-colors">✕</button>
       </div>
       
@@ -157,7 +168,9 @@
     </div>
   </div>
 
-</div> <ng-template #articleList let-articles="articles">
+</div> 
+
+<ng-template #articleList let-articles="articles">
   @if (articles && articles.length > 0) {
     @for (article of articles; track $index) {
       <div class="bg-white dark:bg-slate-900 p-3 rounded-lg shadow-sm border dark:border-slate-800 mb-3 relative group hover:border-indigo-300 transition-all">
