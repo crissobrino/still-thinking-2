@@ -5,6 +5,9 @@ import { ChatService } from '../../services/chat.service';
 import { RagResponse, Article } from '../../models/rag-response.model';
 import { ThemeService } from '../../services/theme.service';
 import { LanguageService } from '../../../services/language.service';
+import { Router } from '@angular/router';
+
+
 @Component({
   selector: 'app-chat',
   standalone: true, // <--- ESTO ES LO QUE ARREGLA EL ERROR NG2012
@@ -24,8 +27,13 @@ export class ChatComponent {
     private chatService: ChatService,
     public lang: LanguageService,
     private cdr: ChangeDetectorRef,
+    private router: Router,
     public theme: ThemeService 
   ) {}
+
+  goBack() {
+    this.router.navigate(['/']);
+  }
 
   onSendMessage() {
     if (!this.userInput.trim() || this.isLoading) return;
