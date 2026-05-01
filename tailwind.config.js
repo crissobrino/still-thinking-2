@@ -2,7 +2,7 @@
 module.exports = {
   darkMode: 'class', // <--- FUNDAMENTAL para que funcione el botón
   content: [
-    "./src/**/*.{html,ts}",
+    './src/**/*.{html,ts}',
   ],
   theme: {
     extend: {
