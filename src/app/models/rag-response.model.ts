@@ -30,6 +30,7 @@ export interface Metrics {
 export interface RagResponse {
   answer: string;
   articles: Article[];
+  extended_articles?: Article[];
   enn_articles?: Article[];
   metrics: Metrics;
   language: string;

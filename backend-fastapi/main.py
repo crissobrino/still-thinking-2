@@ -6,16 +6,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from deep_translator import GoogleTranslator
 from contextlib import asynccontextmanager
 import torch
+import tiktoken
+
+encoder = tiktoken.get_encoding("cl100k_base")
+
 # Ajuste de path e importaciones
 sys.path.append("/export/data_ml4ds/Neurocosas/others/nlp/Still_thinking/backend-fastapi")
 from scripts.search_chroma import search, search_enn
-from llm.client import UC3MClient
+from llm.client import UC3MClient, UC3MClient_large
 from llm.language import detect_language, get_language_name
 from llm.prompts import build_comparison_prompt, build_system_prompt, build_summarize_prompt
 from llm.guardrails import should_refuse
 from sentence_transformers import CrossEncoder
+import torch
 
-reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', default_activation_function=None, device="cuda")
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', default_activation_function=torch.nn.Sigmoid(), device="cuda")
 class SearchRequest(BaseModel):
     query: str
     k: int = 5
@@ -51,8 +56,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 client = UC3MClient()
 
-QWEN_API_KEY = os.getenv("QWEN_API_KEY", "TU_API_KEY_AQUI_SI_ES_PRUEBA_LOCAL") 
-qwen_client = UC3MClient2()
+client2 = UC3MClient_large()
 
 
 app.add_middleware(
@@ -111,6 +115,7 @@ def process_results(results):
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
     t_start = time.perf_counter()
+    metrics = {}
     
     # 1. Idioma y Traducción
     user_lang_code = detect_language(request.query)
@@ -123,11 +128,14 @@ async def search_endpoint(request: SearchRequest):
     # 👇 LÓGICA TWO-STAGE: Si usamos re-ranker, pedimos 20 a Chroma. Si no, pedimos los que diga la request (5).
     initial_k = 20 if request.use_reranker else request.k
 
+
     # 2. Búsqueda ANN Inicial
     t0 = time.perf_counter()
     raw_ann = search(query_en, initial_k) # Usamos initial_k
+    
     ann_time = (time.perf_counter() - t0) * 1000
     retrieved_ann = process_results(raw_ann)
+    extended_articles = retrieved_ann.copy()
     
     metrics = {"ann_time": round(ann_time, 2)}
 
@@ -146,29 +154,38 @@ async def search_endpoint(request: SearchRequest):
         # Ordenamos de mayor a menor según la precisión del Cross-Encoder
         retrieved_ann = sorted(retrieved_ann, key=lambda x: x["score"], reverse=True)
         
+        extended_articles = retrieved_ann[:30]
+
         # RECORTE: Nos quedamos estrictamente con los mejores K (5)
         retrieved_ann = retrieved_ann[:request.k]
         
         metrics["rerank_time"] = round((time.perf_counter() - t_rerank) * 1000, 2)
 
-
+    t_guardrail_start = time.perf_counter()
     # 3. Guardrails (Evalúa sobre la lista final de 5 documentos)
     scores_final = [doc["score"] for doc in retrieved_ann]
+
     if should_refuse(retrieved_ann, scores_final):
         refusal = "I’m sorry, but I do not have any additional specific articles in the current corpus on this topic."
         if user_lang_code != 'en':
             refusal = GoogleTranslator(source='en', target=user_lang_code).translate(refusal)
         
+        # Guardamos latencia del guardrail incluso si bloquea
+        metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
+        metrics["total_time"] = round((time.perf_counter() - t_start) * 1000, 2)
+
         total_time = (time.perf_counter() - t_start) * 1000
         metrics["total_time"] = round(total_time, 2)
         
         return {
             "answer": refusal, 
             "articles": [], 
+            "extended_articles": extended_articles,
             "language": user_lang_code, 
             "metrics": metrics
         }
 
+    metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
     # 4. Modo Evaluación ENN (Opcional)
     enn_docs = []
     if request.eval_mode:
@@ -188,24 +205,24 @@ async def search_endpoint(request: SearchRequest):
     for i, doc in enumerate(retrieved_ann, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
+    # Calculamos tokens del contexto enviado al LLM
+    metrics["context_tokens"] = len(encoder.encode(context)) # <--- TOKENS ENTRADA
+
     prompt = build_comparison_prompt(request.query, context, target_language_name)
     system_p = build_system_prompt(target_language_name)
 
     # Medimos solo el tiempo del LLM
     t_llm = time.perf_counter()
-    # 👇 NUEVO: Decidimos qué modelo usar
+    
+    # 👇 ASÍ QUEDA AHORA: Súper limpio gracias a tu nueva clase 👇
     if request.use_powerful_model:
         try:
-            # Llamada al modelo potente (Qwen)
-            response = qwen_client.chat.completions.create(
-                model="qwen-2.5-32b-instruct", # O el nombre exacto que requiera tu proveedor
-                messages=[
-                    {"role": "system", "content": system_p},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3 # Ajusta según tu preferencia
+            # Llamada a tu nueva clase UC3MClient_large
+            llm_res = client2.chat(
+                user_prompt=prompt, 
+                system_prompt=system_p,
+                temperature=0.3 # Le pasas la temperatura directamente a tu método
             )
-            llm_res = response.choices[0].message.content
         except Exception as e:
             print(f"Error usando Qwen: {e}")
             llm_res = "Hubo un error de conexión con el modelo avanzado."
@@ -215,12 +232,16 @@ async def search_endpoint(request: SearchRequest):
 
     metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
 
+    # Calculamos tokens de la respuesta generada
+    metrics["answer_tokens"] = len(encoder.encode(llm_res)) # <--- TOKENS SALIDA
+
     total_time = (time.perf_counter() - t_start) * 1000
     metrics["total_time"] = round(total_time, 2)
 
     return {
         "answer": llm_res,
         "articles": retrieved_ann,
+        "extended_articles": extended_articles,
         "enn_articles": enn_docs if request.eval_mode else [],
         "metrics": metrics,
         "language": user_lang_code

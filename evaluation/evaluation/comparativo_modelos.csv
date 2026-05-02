@@ -1,0 +1,11 @@
+Query,Precision@5,MRR,NDCG@5,Time_Gold_ms,Time_Test_ms,Match_Count
+fine-tuning BERT for text classification tasks,1.0,1.0,1.0,562401.39,107472.5,5
+large language models for abstractive text summarization,1.0,1.0,1.0,227380.61,106194.26,5
+aprendizaje automático para clasificación de texto,1.0,1.0,1.0,215077.23,115348.45,5
+redes neuronales para procesamiento del lenguaje natural,1.0,1.0,1.0,236776.59,103580.59,5
+knowledge graph embeddings for link prediction,1.0,1.0,1.0,196090.56,109929.68,5
+sentiment analysis using deep learning,1.0,1.0,1.0,204206.26,101782.69,5
+deep learning,1.0,1.0,1.0,194912.16,112636.71,5
+quantum computing error correction,1.0,1.0,1.0,202562.28,97265.83,5
+attention,1.0,1.0,1.0,209155.09,112268.16,5
+history of the Roman Empire,0.0,0.0,0.0,168.19,51.66,0
