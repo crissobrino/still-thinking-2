@@ -21,6 +21,7 @@ class SearchRequest(BaseModel):
     k: int = 5
     eval_mode: bool = False
     use_reranker: bool = False
+    use_powerful_model: bool = False
 
 class SummarizeRequest(BaseModel):
 
@@ -46,9 +47,13 @@ async def lifespan(app: FastAPI):
     print("✅ ¡Sistemas 100% listos! La primera búsqueda será instantánea.")
     yield
     # (Lo que pongas después del yield se ejecutaría al apagar el servidor)
-    
+
 app = FastAPI(lifespan=lifespan)
 client = UC3MClient()
+
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "TU_API_KEY_AQUI_SI_ES_PRUEBA_LOCAL") 
+qwen_client = UC3MClient2()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -184,10 +189,30 @@ async def search_endpoint(request: SearchRequest):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
     prompt = build_comparison_prompt(request.query, context, target_language_name)
-    
+    system_p = build_system_prompt(target_language_name)
+
     # Medimos solo el tiempo del LLM
     t_llm = time.perf_counter()
-    llm_res = client.chat(user_prompt=prompt, system_prompt=build_system_prompt(target_language_name))
+    # 👇 NUEVO: Decidimos qué modelo usar
+    if request.use_powerful_model:
+        try:
+            # Llamada al modelo potente (Qwen)
+            response = qwen_client.chat.completions.create(
+                model="qwen-2.5-32b-instruct", # O el nombre exacto que requiera tu proveedor
+                messages=[
+                    {"role": "system", "content": system_p},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3 # Ajusta según tu preferencia
+            )
+            llm_res = response.choices[0].message.content
+        except Exception as e:
+            print(f"Error usando Qwen: {e}")
+            llm_res = "Hubo un error de conexión con el modelo avanzado."
+    else:
+        # Llamada a tu modelo rápido por defecto (UC3MClient)
+        llm_res = client.chat(user_prompt=prompt, system_prompt=system_p)
+
     metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
 
     total_time = (time.perf_counter() - t_start) * 1000

@@ -28,13 +28,28 @@ export class ChatComponent {
   useReranker = false; 
   showGraph = false;
 
+  // Nuevas variables
+  usePowerfulModel: boolean = false; // Controla el modelo (Rápido vs Avanzado)
+  showingFullGraph: boolean = false; // Controla si vemos el Top-5 o la base de datos ampliada
+
   openGraphModal() {
     this.showGraph = true;
     // Esperamos 50ms para que Angular renderice el modal en el DOM
     setTimeout(() => {
       this.renderGraph();
     }, 50);
+    
   }
+  toggleFullGraph() {
+      this.showingFullGraph = !this.showingFullGraph;
+      
+      // Aquí tienes que decidir cómo consigues los nodos extra. 
+      // Opción A: Haces una llamada rápida al backend para pedir el Top-50.
+      // Opción B: Si el backend ya te devolvió más artículos de los que muestras, usas esos.
+      
+      // Una vez tengas los datos nuevos, vuelves a pintar el grafo:
+      this.renderGraph(); 
+    }
 
   // 3. La función que dibuja la magia
   renderGraph() {
@@ -119,7 +134,8 @@ export class ChatComponent {
     
 
     // 👇 AÑADIMOS this.useReranker COMO 4º PARÁMETRO
-    this.chatService.getQueryResponse(savedQuery, 5, this.isEvalMode, this.useReranker).subscribe({
+    this.chatService.getQueryResponse(savedQuery, 5, this.isEvalMode, this.useReranker, this.usePowerfulModel).subscribe({
+    
       next: (response: RagResponse) => {
         try {
           // AQUÍ NACE botText

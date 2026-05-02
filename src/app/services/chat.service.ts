@@ -15,14 +15,15 @@ export class ChatService {
  
 
   // Añadimos useReranker con un valor por defecto false
-  getQueryResponse(query: string, k: number = 5, evalMode: boolean = false, useReranker: boolean = false) {
+  getQueryResponse(query: string, k: number = 5, evalMode: boolean = false, useReranker: boolean = false, usePowerfulModel: boolean = false) {
     
     // Lo incluimos en el cuerpo de la petición que va al backend de Python
     const body = {
       query: query,
       k: k,
       eval_mode: evalMode,
-      use_reranker: useReranker // <-- AQUÍ SE ENVÍA AL MAIN.PY
+      use_reranker: useReranker, // <-- AQUÍ SE ENVÍA AL MAIN.PY
+      usePowerfulModel: usePowerfulModel
     };
 
     // Tu llamada HTTP normal (la URL dependerá de cómo la tengas puesta)
