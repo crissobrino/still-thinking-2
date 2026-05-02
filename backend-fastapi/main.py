@@ -166,16 +166,17 @@ async def search_endpoint(request: SearchRequest):
     scores_final = [doc["score"] for doc in retrieved_ann]
 
     if should_refuse(retrieved_ann, scores_final):
-        refusal = "I’m sorry, but I do not have any additional specific articles in the current corpus on this topic."
+        refusal = "I’m sorry, but I do not have any additional specific articles..."
         if user_lang_code != 'en':
             refusal = GoogleTranslator(source='en', target=user_lang_code).translate(refusal)
         
         # Guardamos latencia del guardrail incluso si bloquea
         metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
         metrics["total_time"] = round((time.perf_counter() - t_start) * 1000, 2)
-
-        total_time = (time.perf_counter() - t_start) * 1000
-        metrics["total_time"] = round(total_time, 2)
+        
+        # 👇 NUEVO: Añadimos las llaves con valor 0 para mantener la estructura
+        metrics["context_tokens"] = 0
+        metrics["answer_tokens"] = 0
         
         return {
             "answer": refusal, 
