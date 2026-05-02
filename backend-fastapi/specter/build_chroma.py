@@ -1,0 +1,89 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+import pandas as pd
+import chromadb
+from specter2_ef import Specter2EmbeddingFunction
+
+INPUT_PATH = "backend-fastapi/papers_filtered.jsonl"
+CHROMA_PATH = "backend-fastapi/chroma_db_specter"
+COLLECTION_NAME = "papers"
+BATCH_SIZE = 256  # smaller batches — SPECTER2 is heavier than MiniLM
+
+
+def format_authors(authors):
+    if isinstance(authors, list):
+        return ", ".join(str(a) for a in authors)
+    return str(authors or "").strip()
+
+
+def main():
+    df = pd.read_json(INPUT_PATH, lines=True)
+
+    print(f"Loaded {len(df)} rows from {INPUT_PATH}")
+
+    for col in ["id", "title", "abstract", "authors", "categories", "update_date"]:
+        if col not in df.columns:
+            raise ValueError(f"Missing required column: {col}")
+
+    df["id"] = df["id"].astype(str).str.strip()
+    df["title"] = df["title"].fillna("").astype(str).str.strip()
+    df["abstract"] = df["abstract"].fillna("").astype(str).str.strip()
+    df["authors"] = df["authors"].apply(format_authors)
+    df["categories"] = df["categories"].fillna("").astype(str).str.strip()
+    df["update_date"] = df["update_date"].fillna("").astype(str).str.strip()
+
+    df = df[(df["id"] != "") & (df["title"] != "") & (df["abstract"] != "")]
+    df = df[df["abstract"].str.len() >= 50]
+    df = df.drop_duplicates(subset=["id"])
+    df = df.drop_duplicates(subset=["title", "abstract"])
+
+    print(f"Rows after cleanup: {len(df)}")
+
+    # SPECTER2 expected format: title [SEP] abstract
+    sep = "[SEP]"
+    df["document"] = df.apply(
+        lambda row: f"{row['title']} {sep} {row['abstract']}", axis=1
+    )
+
+    ids = df["id"].tolist()
+    documents = df["document"].tolist()
+    metadatas = [
+        {
+            "title": row["title"],
+            "authors": row["authors"],
+            "categories": row["categories"],
+            "update_date": row["update_date"],
+        }
+        for _, row in df.iterrows()
+    ]
+
+    ef = Specter2EmbeddingFunction()
+
+    client = chromadb.PersistentClient(path=CHROMA_PATH)
+
+    try:
+        client.delete_collection(COLLECTION_NAME)
+        print(f"Deleted existing collection: {COLLECTION_NAME}")
+    except Exception:
+        print(f"No existing collection to delete: {COLLECTION_NAME}")
+
+    collection = client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=ef)
+
+    total = len(ids)
+    for start in range(0, total, BATCH_SIZE):
+        end = min(start + BATCH_SIZE, total)
+        collection.add(
+            ids=ids[start:end],
+            documents=documents[start:end],
+            metadatas=metadatas[start:end],
+        )
+        print(f"Inserted {end}/{total}")
+
+    print(f"\nDone. Inserted {total} papers into chroma_db_specter.")
+
+
+if __name__ == "__main__":
+    main()
