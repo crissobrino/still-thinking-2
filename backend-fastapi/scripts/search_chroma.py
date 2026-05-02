@@ -1,13 +1,17 @@
 import os
 from pathlib import Path
 from chromadb import PersistentClient
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
 
 client = PersistentClient(path=CHROMA_PATH)
-collection = client.get_collection("papers")
+import torch
+_device = "cuda" if torch.cuda.is_available() else "cpu"
+_ef = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2", device=_device)
+collection = client.get_collection("papers", embedding_function=_ef)
 
 def search_ann(query_text: str, k: int = 5):
     """Búsqueda estándar de Chroma (usa HNSW/ANN)"""

@@ -1,4 +1,4 @@
-def should_refuse(retrieved_docs, scores=None, min_docs=1, min_score=0.05) -> bool:
+def should_refuse(retrieved_docs, scores=None, min_docs=1, min_score=0.35) -> bool:
     if not retrieved_docs or len(retrieved_docs) < min_docs:
         return True
 
