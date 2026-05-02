@@ -1,9 +1,13 @@
-/* You can add global styles to this file, and also import other style files */
-@import 'tailwindcss';
+/* src/styles.css */
+@import "tailwindcss";
+@config "../tailwind.config.js"; /* <--- ESTO ES VITAL en v4 para que lea tu darkMode: 'class' */
 
-/* Opcional: Fuente más moderna */
-body {
-  font-family: 'Inter', system-ui, sans-serif;
+/* Tus animaciones y estilos globales debajo */
+html, body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
 
 @keyframes fadeIn {

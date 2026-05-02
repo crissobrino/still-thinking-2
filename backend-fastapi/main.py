@@ -5,19 +5,28 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from deep_translator import GoogleTranslator
 from contextlib import asynccontextmanager
+import torch
+import tiktoken
+
+encoder = tiktoken.get_encoding("cl100k_base")
 
 # Ajuste de path e importaciones
 sys.path.append("/export/data_ml4ds/Neurocosas/others/nlp/Still_thinking/backend-fastapi")
 from scripts.search_chroma import search, search_enn
-from llm.client import UC3MClient
+from llm.client import UC3MClient, UC3MClient_large
 from llm.language import detect_language, get_language_name
 from llm.prompts import build_comparison_prompt, build_system_prompt, build_summarize_prompt
 from llm.guardrails import should_refuse
+from sentence_transformers import CrossEncoder
+import torch
 
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', default_activation_function=torch.nn.Sigmoid(), device="cuda")
 class SearchRequest(BaseModel):
     query: str
     k: int = 5
     eval_mode: bool = False
+    use_reranker: bool = False
+    use_powerful_model: bool = False
 
 class SummarizeRequest(BaseModel):
 
@@ -25,8 +34,30 @@ class SummarizeRequest(BaseModel):
     query: str
     language: str = "Spanish"
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Esto se ejecuta AL ARRANCAR el servidor
+    print("🔥 Calentando motores (Warm-up de Modelos)...")
+    dummy_text = "This is a warm-up query."
+    
+    # 1. Calentamos Chroma y el modelo de Embeddings (all-MiniLM)
+    try:
+        search(dummy_text, 1) 
+    except Exception as e:
+        print("Aviso en warmup ANN:", e)
+        
+    # 2. Calentamos el Re-ranker (CrossEncoder) en la GPU
+    reranker.predict([[dummy_text, dummy_text]])
+    
+    print("✅ ¡Sistemas 100% listos! La primera búsqueda será instantánea.")
+    yield
+    # (Lo que pongas después del yield se ejecutaría al apagar el servidor)
+
+app = FastAPI(lifespan=lifespan)
 client = UC3MClient()
+
+client2 = UC3MClient_large()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,6 +114,9 @@ def process_results(results):
 
 @app.post("/search")
 async def search_endpoint(request: SearchRequest):
+    t_start = time.perf_counter()
+    metrics = {}
+    
     # 1. Idioma y Traducción
     user_lang_code = detect_language(request.query)
     target_language_name = get_language_name(user_lang_code)
@@ -91,45 +125,77 @@ async def search_endpoint(request: SearchRequest):
     if user_lang_code != 'en':
         query_en = GoogleTranslator(source='auto', target='en').translate(request.query)
 
-    # 2. Búsqueda ANN (Siempre se hace)
+    # 👇 LÓGICA TWO-STAGE: Si usamos re-ranker, pedimos 20 a Chroma. Si no, pedimos los que diga la request (5).
+    initial_k = 20 if request.use_reranker else request.k
+
+
+    # 2. Búsqueda ANN Inicial
     t0 = time.perf_counter()
-    raw_ann = search(query_en, request.k)
+    raw_ann = search(query_en, initial_k) # Usamos initial_k
+    
     ann_time = (time.perf_counter() - t0) * 1000
     retrieved_ann = process_results(raw_ann)
+    extended_articles = retrieved_ann.copy()
+    
+    metrics = {"ann_time": round(ann_time, 2)}
 
-    # 3. Guardrails (Usamos resultados ANN para decidir si responder)
-    scores = [doc["score"] for doc in retrieved_ann]
-    if should_refuse(retrieved_ann, scores):
-        refusal = "I’m sorry, but I do not have any additional specific articles in the current corpus on this topic."
+    # 👇 NUEVO: 2.5 Re-ranking y Recorte (Opcional)
+    if request.use_reranker and len(retrieved_ann) > 0:
+        t_rerank = time.perf_counter()
+        
+        # Preparamos los pares [Pregunta, Abstract]
+        pairs = [[query_en, doc["abstract"]] for doc in retrieved_ann]
+        scores = reranker.predict(pairs)
+        
+        # Actualizamos puntuaciones
+        for idx, doc in enumerate(retrieved_ann):
+            doc["score"] = float(scores[idx])
+            
+        # Ordenamos de mayor a menor según la precisión del Cross-Encoder
+        retrieved_ann = sorted(retrieved_ann, key=lambda x: x["score"], reverse=True)
+        
+        extended_articles = retrieved_ann[:30]
+
+        # RECORTE: Nos quedamos estrictamente con los mejores K (5)
+        retrieved_ann = retrieved_ann[:request.k]
+        
+        metrics["rerank_time"] = round((time.perf_counter() - t_rerank) * 1000, 2)
+
+    t_guardrail_start = time.perf_counter()
+    # 3. Guardrails (Evalúa sobre la lista final de 5 documentos)
+    scores_final = [doc["score"] for doc in retrieved_ann]
+
+    if should_refuse(retrieved_ann, scores_final):
+        refusal = "I’m sorry, but I do not have any additional specific articles..."
         if user_lang_code != 'en':
             refusal = GoogleTranslator(source='en', target=user_lang_code).translate(refusal)
-        return {"answer": refusal, "articles": [], "language": user_lang_code, "metrics": {"ann_time": round(ann_time, 2)}}
+        
+        # Guardamos latencia del guardrail incluso si bloquea
+        metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
+        metrics["total_time"] = round((time.perf_counter() - t_start) * 1000, 2)
+        
+        # 👇 NUEVO: Añadimos las llaves con valor 0 para mantener la estructura
+        metrics["context_tokens"] = 0
+        metrics["answer_tokens"] = 0
+        
+        return {
+            "answer": refusal, 
+            "articles": [], 
+            "extended_articles": extended_articles,
+            "language": user_lang_code, 
+            "metrics": metrics
+        }
 
-    # 4. Modo Evaluación (Opcional)
-    metrics = {"ann_time": round(ann_time, 2)}
+    metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
+    # 4. Modo Evaluación ENN (Opcional)
     enn_docs = []
     if request.eval_mode:
         t1 = time.perf_counter()
-        raw_enn = search_enn(query_en, request.k)
+        raw_enn = search_enn(query_en, request.k) # ENN siempre busca K directamente
         enn_time = (time.perf_counter() - t1) * 1000
-
-
-        ##########################################
-        print("\n" + "="*30)
-        print("🔍 DEBUG ENN RAW:")
-        print(f"Tipo de raw_enn: {type(raw_enn)}")
-        print(f"Contenido: {raw_enn}")
-        print("="*30 + "\n")
-
-
-
-
-
-
 
         enn_docs = process_results(raw_enn)
         
-        # Calcular Recall
         ids_ann = {d['id'] for d in retrieved_ann if d.get('id')}
         ids_enn = {d['id'] for d in enn_docs if d.get('id')}
         recall = len(ids_ann & ids_enn) / request.k if request.k > 0 else 0
@@ -140,12 +206,43 @@ async def search_endpoint(request: SearchRequest):
     for i, doc in enumerate(retrieved_ann, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
+    # Calculamos tokens del contexto enviado al LLM
+    metrics["context_tokens"] = len(encoder.encode(context)) # <--- TOKENS ENTRADA
+
     prompt = build_comparison_prompt(request.query, context, target_language_name)
-    llm_res = client.chat(user_prompt=prompt, system_prompt=build_system_prompt(target_language_name))
+    system_p = build_system_prompt(target_language_name)
+
+    # Medimos solo el tiempo del LLM
+    t_llm = time.perf_counter()
+    
+    # 👇 ASÍ QUEDA AHORA: Súper limpio gracias a tu nueva clase 👇
+    if request.use_powerful_model:
+        try:
+            # Llamada a tu nueva clase UC3MClient_large
+            llm_res = client2.chat(
+                user_prompt=prompt, 
+                system_prompt=system_p,
+                temperature=0.3 # Le pasas la temperatura directamente a tu método
+            )
+        except Exception as e:
+            print(f"Error usando Qwen: {e}")
+            llm_res = "Hubo un error de conexión con el modelo avanzado."
+    else:
+        # Llamada a tu modelo rápido por defecto (UC3MClient)
+        llm_res = client.chat(user_prompt=prompt, system_prompt=system_p)
+
+    metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
+
+    # Calculamos tokens de la respuesta generada
+    metrics["answer_tokens"] = len(encoder.encode(llm_res)) # <--- TOKENS SALIDA
+
+    total_time = (time.perf_counter() - t_start) * 1000
+    metrics["total_time"] = round(total_time, 2)
 
     return {
         "answer": llm_res,
         "articles": retrieved_ann,
+        "extended_articles": extended_articles,
         "enn_articles": enn_docs if request.eval_mode else [],
         "metrics": metrics,
         "language": user_lang_code
@@ -157,3 +254,4 @@ async def summarize_endpoint(request: SummarizeRequest):
     prompt = build_summarize_prompt(request.query, request.abstract, request.language)
     summary = client.chat(user_prompt=prompt, system_prompt="You are a concise academic summarizer.")
     return {"summary": summary}
+

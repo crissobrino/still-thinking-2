@@ -12,13 +12,24 @@ export class ChatService {
 
   constructor(private http: HttpClient) {}
 
-  getQueryResponse(query: string, k: number = 5, evalMode: boolean = false): Observable<RagResponse> {
-    return this.http.post<RagResponse>(`${this.baseUrl}/search`, { 
-      query, 
-      k, 
-      eval_mode: evalMode // Asegúrate de que el nombre coincida con el del backend
-    });
+ 
+
+  // Añadimos useReranker con un valor por defecto false
+  getQueryResponse(query: string, k: number = 5, evalMode: boolean = false, useReranker: boolean = false, usePowerfulModel: boolean = false) {
+    
+    // Lo incluimos en el cuerpo de la petición que va al backend de Python
+    const body = {
+      query: query,
+      k: k,
+      eval_mode: evalMode,
+      use_reranker: useReranker, // <-- AQUÍ SE ENVÍA AL MAIN.PY
+      usePowerfulModel: usePowerfulModel
+    };
+
+    // Tu llamada HTTP normal (la URL dependerá de cómo la tengas puesta)
+    return this.http.post<RagResponse>(`${this.baseUrl}/search`, body);
   }
+
 
   getSummary(abstract: string, query: string, lang: string): Observable<{summary: string}> {
     // Apunta a http://localhost:8000/summarize
