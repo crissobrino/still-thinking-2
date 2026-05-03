@@ -21,7 +21,18 @@ export class LanguageService {
       summaryReady: 'Resumen listo',
       viewAbstract: 'Ver abstract',
       hideInfo: 'Ocultar info',
-      recallMetric: 'Métrica Recall'
+      recallMetric: 'Métrica Recall',
+      reRanker: 'Re-ranker',
+      advancedModel: 'Modelo Avanzado',
+      fastModel: 'Modelo Rápido',
+      globalPerformance: 'Rendimiento Global',
+      llmInference: 'Inferencia LLM',
+      totalTime: 'Tiempo Total',
+      visualMapBtn: 'VER MAPA VISUAL DE RELACIONES',
+      relevanceMap: 'Mapa de Relevancia',
+      seeTop5: 'VER SOLO TOP-5',
+      seeExtended: 'VER RED EXTENDIDA',
+      generatingGraph: 'Generando conexiones visuales...'
     },
     en: {
       title: 'Research AI',
@@ -39,7 +50,18 @@ export class LanguageService {
       summaryReady: 'Summary ready',
       viewAbstract: 'View abstract',
       hideInfo: 'Hide info',
-      recallMetric: 'Recall Metric'
+      recallMetric: 'Recall Metric',
+      reRanker: 'Re-ranker',
+      advancedModel: 'Advanced Model',
+      fastModel: 'Fast Model',
+      globalPerformance: 'Global Performance',
+      llmInference: 'LLM Inference',
+      totalTime: 'Total Time',
+      visualMapBtn: 'VIEW VISUAL RELATIONSHIP MAP',
+      relevanceMap: 'Relevance Map',
+      seeTop5: 'VIEW ONLY TOP-5',
+      seeExtended: 'VIEW EXTENDED NETWORK',
+      generatingGraph: 'Generating visual connections...'
     },
     fr: {
       title: 'Recherche IA',
@@ -57,7 +79,18 @@ export class LanguageService {
       summaryReady: 'Résumé prêt',
       viewAbstract: 'Voir l\'abstract',
       hideInfo: 'Masquer info',
-      recallMetric: 'Métrique Recall'
+      recallMetric: 'Métrique Recall',
+      reRanker: 'Re-ranker',
+      advancedModel: 'Modèle Avancé',
+      fastModel: 'Modèle Rapide',
+      globalPerformance: 'Performance Globale',
+      llmInference: 'Inférence LLM',
+      totalTime: 'Temps Total',
+      visualMapBtn: 'VOIR LA CARTE VISUELLE DES RELATIONS',
+      relevanceMap: 'Carte de Pertinence',
+      seeTop5: 'VOIR UNIQUEMENT LE TOP-5',
+      seeExtended: 'VOIR LE RÉSEAU ÉTENDU',
+      generatingGraph: 'Génération des connexions visuelles...'
     }
   };
 

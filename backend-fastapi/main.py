@@ -27,6 +27,7 @@ class SearchRequest(BaseModel):
     eval_mode: bool = False
     use_reranker: bool = False
     use_powerful_model: bool = False
+    skip_llm: bool = False
 
 class SummarizeRequest(BaseModel):
 
@@ -214,33 +215,26 @@ async def search_endpoint(request: SearchRequest):
     # Calculamos tokens del contexto enviado al LLM
     metrics["context_tokens"] = len(encoder.encode(context)) # <--- TOKENS ENTRADA
 
-    prompt = build_comparison_prompt(request.query, context, target_language_name)
-    system_p = build_system_prompt(target_language_name)
-
-    # Medimos solo el tiempo del LLM
-    t_llm = time.perf_counter()
-    
-    # 👇 ASÍ QUEDA AHORA: Súper limpio gracias a tu nueva clase 👇
-    if request.use_powerful_model:
-        try:
-            # Llamada a tu nueva clase UC3MClient_large
-            llm_res = client2.chat(
-                user_prompt=prompt, 
-                system_prompt=system_p,
-                temperature=0.3 # Le pasas la temperatura directamente a tu método
-            )
-        except Exception as e:
-            print(f"Error usando Qwen: {e}")
-            llm_res = "Hubo un error de conexión con el modelo avanzado."
+    if request.skip_llm:
+        llm_res = "LLM Generation skipped for evaluation."
+        metrics["llm_time"] = 0
+        metrics["answer_tokens"] = 0
     else:
-        # Llamada a tu modelo rápido por defecto (UC3MClient)
-        llm_res = client.chat(user_prompt=prompt, system_prompt=system_p)
+        prompt = build_comparison_prompt(request.query, context, target_language_name)
+        system_p = build_system_prompt(target_language_name)
+        t_llm = time.perf_counter()
+        
+        if request.use_powerful_model:
+            try:
+                llm_res = client2.chat(user_prompt=prompt, system_prompt=system_p, temperature=0.3)
+            except Exception as e:
+                llm_res = "Error de conexión con modelo avanzado."
+        else:
+            llm_res = client.chat(user_prompt=prompt, system_prompt=system_p)
 
-    metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
-
-    # Calculamos tokens de la respuesta generada
-    metrics["answer_tokens"] = len(encoder.encode(llm_res)) # <--- TOKENS SALIDA
-
+        metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
+        metrics["answer_tokens"] = len(encoder.encode(llm_res))
+        
     total_time = (time.perf_counter() - t_start) * 1000
     metrics["total_time"] = round(total_time, 2)
 
