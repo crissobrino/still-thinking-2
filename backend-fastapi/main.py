@@ -20,7 +20,7 @@ from llm.guardrails import should_refuse
 from sentence_transformers import CrossEncoder
 import torch
 
-reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', default_activation_function=torch.nn.Sigmoid(), device="cuda")
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', activation_fn=torch.nn.Sigmoid(), device="cuda" if torch.cuda.is_available() else "cpu")
 class SearchRequest(BaseModel):
     query: str
     k: int = 5

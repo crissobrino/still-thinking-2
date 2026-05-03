@@ -1,8 +1,10 @@
 import sys
 import os
 from pathlib import Path
+import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 import numpy as np
 from chromadb import PersistentClient
@@ -13,7 +15,7 @@ CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db_specter"))
 
 _ef = Specter2EmbeddingFunction()
 client = PersistentClient(path=CHROMA_PATH)
-collection = client.get_collection("papers", embedding_function=_ef)
+collection = client.get_collection("papers")
 
 
 def search_ann(query_text: str, k: int = 5):

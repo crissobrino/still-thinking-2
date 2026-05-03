@@ -3,6 +3,7 @@ import sys
 import json
 import time
 import re
+import ollama as _ollama
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 HERE    = os.path.dirname(os.path.abspath(__file__))
@@ -16,9 +17,12 @@ load_dotenv(os.path.join(BACKEND, '.env'))
 
 # ── Config ────────────────────────────────────────────────────────────────────
 # One metric per run — avoids RAGAS batching multiple metrics together
-METRIC = "faithfulness"   # faithfulness | answer_relevancy | context_recall
+METRIC = "context_recall"   # faithfulness | answer_relevancy | context_recall
 
 JUDGE_MODEL = "gpt-4o-mini"
+
+# Pipeline generator model: "small" → qwen3:8b | "big" → qwen3:32b
+PIPELINE_MODEL = "qwen3:32b"   # "qwen3:8b" | "qwen3:32b"
 
 # Short sleep between samples — OpenAI handles rate limits via max_retries
 INTER_CALL_SLEEP = 5
@@ -27,13 +31,7 @@ INTER_CALL_SLEEP = 5
 FORCE_REFRESH = True
 
 # Set True to use CrossEncoder reranking (fetch 20, rerank, keep top-5)
-USE_RERANKER = False
-
-# Set True to use brute-force exact search (ENN) instead of HNSW/ANN
-USE_ENN = False
-
-# Set True to use SPECTER2 DB instead of base all-MiniLM DB (mutually exclusive with USE_ENN)
-USE_SPECTER = True
+USE_RERANKER = True
 
 _openai_key = os.environ["OPENAI_API_KEY"]
 
@@ -105,17 +103,12 @@ _query_data   = json.load(open(os.path.join(HERE, '..', '..', 'test_queries.json
 QUERY_TYPES   = {q["query"]: q["type"] for q in _query_data}
 
 # ── Pipeline cache ────────────────────────────────────────────────────────────
-_suffix = ("_specter" if USE_SPECTER else ("_enn" if USE_ENN else "")) + ("_reranked" if USE_RERANKER else "")
-CACHE_PATH = os.path.join(HERE, '..', 'results', f'pipeline_cache_v2{_suffix}.json')
+_model_tag = PIPELINE_MODEL.replace(":", "-")
+_suffix    = ("_reranked" if USE_RERANKER else "")
+CACHE_PATH = os.path.join(HERE, '..', 'results', f'pipeline_cache_{_model_tag}{_suffix}.json')
 
 if FORCE_REFRESH:
-    if USE_SPECTER:
-        from specter.search_chroma import search as _search_fn
-    elif USE_ENN:
-        from scripts.search_chroma import search_enn_formatted as _search_fn
-    else:
-        from scripts.search_chroma import search as _search_fn
-    from llm.client import UC3MClient
+    from scripts.search_chroma import search as _search_fn
     from llm.prompts import build_comparison_prompt, build_system_prompt
     from llm.guardrails import should_refuse
     from llm.language import detect_language, get_language_name
@@ -130,10 +123,28 @@ if FORCE_REFRESH:
             device="cuda" if torch.cuda.is_available() else "cpu",
         )
 
-    os.environ["OLLAMA_MODEL"] = "qwen3:8b"
-    llm_client = UC3MClient()
+    _ollama_key = os.environ["OLLAMA_API_KEY"]
+    _ollama_url = os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es")
+    _pipeline_client = _ollama.Client(
+        host=_ollama_url,
+        headers={"X-API-KEY": _ollama_key},
+        timeout=600,
+    )
 
-    print(f"Running pipeline... [generator: qwen3:8b, db: {'specter' if USE_SPECTER else 'base'}, search: {'ENN' if USE_ENN else 'ANN'}, reranker: {USE_RERANKER}]\n")
+    def _pipeline_chat(user_prompt: str, system_prompt: str) -> str:
+        # stream=True keeps the connection alive through nginx's read timeout
+        chunks = _pipeline_client.chat(
+            model=PIPELINE_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+            options={"temperature": 0.0, "think": False},
+            stream=True,
+        )
+        return "".join(c["message"]["content"] for c in chunks)
+
+    print(f"Running pipeline... [generator: {PIPELINE_MODEL}, reranker: {USE_RERANKER}]\n")
     collected = {"question": [], "contexts": [], "answer": [], "ground_truth": []}
     refused   = []
     _query_data_full = json.load(open(os.path.join(HERE, '..', '..', 'test_queries.json')))["queries"]
@@ -162,7 +173,7 @@ if FORCE_REFRESH:
             f"\n[Article {i}]\nTitle: {r['title']}\nAbstract: {r['document']}\n"
             for i, r in enumerate(results, 1)
         )
-        answer = llm_client.chat(
+        answer = _pipeline_chat(
             user_prompt=build_comparison_prompt(query, context, lang_name),
             system_prompt=build_system_prompt(lang_name),
         )
