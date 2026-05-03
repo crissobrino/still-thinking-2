@@ -4,12 +4,25 @@ import os
 
 API_URL = "http://localhost:8000/search"
 # Define aquí tus queries de investigación reales
+#QUERIES = [
+#    "impact of deep learning in medical imaging",
+#    "attention mechanisms in transformer models",
+#    "quantum error correction code efficiency",
+#    "ethical implications of artificial intelligence in hiring",
+#    "bert vs roberta for sentiment analysis"
+#]
+
 QUERIES = [
-    "impact of deep learning in medical imaging",
-    "attention mechanisms in transformer models",
-    "quantum error correction code efficiency",
-    "ethical implications of artificial intelligence in hiring",
-    "bert vs roberta for sentiment analysis"
+    "fine-tuning BERT for text classification tasks",
+    "large language models for abstractive text summarization",
+    "aprendizaje automático para clasificación de texto",
+    "redes neuronales para procesamiento del lenguaje natural",
+    "knowledge graph embeddings for link prediction",
+    "sentiment analysis using deep learning",
+    "deep learning",
+    "quantum computing error correction",
+    "history of the Roman Empire",
+    "attention"
 ]
 
 def generate_gold():

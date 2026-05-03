@@ -1,0 +1,2 @@
+Mean Token Efficiency: 69.42%
+Mean Guardrail Penalty: 0.00ms

@@ -9,12 +9,30 @@ def run_advanced_evaluation():
     print("🧪 Ejecutando Pruebas Avanzadas...")
     
     # 1. Matriz de Confusión (Ruido)
+    #test_queries = [
+    #    ("How to boil an egg in quantum space?", 0),
+    #    ("Who won the magic match in Harry Potter?", 0),
+    #    ("Transformer self-attention mechanism explained", 1),
+    #    ("BERT architecture for NLP", 1)
+    #]
+
     test_queries = [
-        ("How to boil an egg in quantum space?", 0),
-        ("Who won the magic match in Harry Potter?", 0),
-        ("Transformer self-attention mechanism explained", 1),
-        ("BERT architecture for NLP", 1)
+        ("fine-tuning BERT for text classification tasks", 1),
+        ("large language models for abstractive text summarization", 1),
+        ("aprendizaje automático para clasificación de texto", 1),
+        ("redes neuronales para procesamiento del lenguaje natural", 1),
+        ("knowledge graph embeddings for link prediction", 1),
+        ("sentiment analysis using deep learning", 1),
+        ("deep learning", 1),
+        ("quantum computing error correction", 0),
+        ("history of the Roman Empire", 0),
+        ("attention", 1),
+        ("quiero cocinar pasta carbonara y necesito los ingredientes", 0),
+        ("integrales sin IA", 0),
+        ("manger une pomme de terre", 0),
+        ("Aller en montagne le matin donne mal à la tête", 0),
     ]
+
     y_true, y_pred = [], []
     
     for q, label in test_queries:
