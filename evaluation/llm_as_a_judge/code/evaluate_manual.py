@@ -6,7 +6,7 @@ import requests as _req
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 HERE    = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.join(HERE, '..', 'backend-fastapi')
+BACKEND = os.path.join(HERE, '..', '..', '..', 'backend-fastapi')
 sys.path.insert(0, BACKEND)
 
 os.environ.setdefault("CHROMA_PATH", os.path.join(BACKEND, 'chroma_db'))
@@ -45,13 +45,13 @@ def _check_connection():
 _check_connection()
 
 # ── Test queries ──────────────────────────────────────────────────────────────
-_query_data   = json.load(open(os.path.join(HERE, "test_queries.json")))["queries"]
+_query_data   = json.load(open(os.path.join(HERE, '..', '..', 'test_queries.json')))["queries"]
 TEST_QUERIES  = [q["query"]        for q in _query_data]
 QUERY_TYPES   = {q["query"]: q["type"]         for q in _query_data}
 GROUND_TRUTHS = {q["query"]: q["ground_truth"] for q in _query_data}
 
 # ── Pipeline — reuses cache from evaluate_automated.py ───────────────────────
-CACHE_PATH = os.path.join(HERE, "pipeline_cache.json")
+CACHE_PATH = os.path.join(HERE, '..', 'results', 'pipeline_cache.json')
 
 if not FORCE_REFRESH and os.path.exists(CACHE_PATH):
     print(f"Loading pipeline results from cache ({_PIPELINE_MODEL})...\n")
@@ -240,6 +240,6 @@ for m in METRICS:
     vals = df[m].dropna()
     print(f"  {m}: {vals.mean():.3f}  (n={len(vals)})")
 
-out_path = os.path.join(HERE, f"automated_results_manual_{_JUDGE_MODEL.replace(':', '-')}.csv")
+out_path = os.path.join(HERE, '..', 'results', f"automated_results_manual_{_JUDGE_MODEL.replace(':', '-')}.csv")
 df.to_csv(out_path, index=False)
 print(f"\nSaved to {out_path}")

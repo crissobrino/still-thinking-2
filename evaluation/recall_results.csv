@@ -1,0 +1,28 @@
+Query,Config,Recall,Latency (ms)
+fine-tuning BERT for text classification tasks,ANN,1.0,6628.85
+fine-tuning BERT for text classification tasks,ANN + Rerank,0.4,6452.65
+fine-tuning BERT for text classification tasks,ENN (Gold),1.0,109325.77
+large language models for abstractive text summarization,ANN,1.0,10089.84
+large language models for abstractive text summarization,ANN + Rerank,0.2,6920.72
+large language models for abstractive text summarization,ENN (Gold),1.0,100743.33
+aprendizaje automático para clasificación de texto,ANN,1.0,12549.32
+aprendizaje automático para clasificación de texto,ANN + Rerank,0.4,14532.05
+aprendizaje automático para clasificación de texto,ENN (Gold),1.0,110508.43
+redes neuronales para procesamiento del lenguaje natural,ANN,0.8,9328.89
+redes neuronales para procesamiento del lenguaje natural,ANN + Rerank,0.4,9741.09
+redes neuronales para procesamiento del lenguaje natural,ENN (Gold),1.0,106533.8
+knowledge graph embeddings for link prediction,ANN,1.0,11742.54
+knowledge graph embeddings for link prediction,ANN + Rerank,0.6,12680.02
+knowledge graph embeddings for link prediction,ENN (Gold),1.0,102619.9
+sentiment analysis using deep learning,ANN,1.0,11218.35
+sentiment analysis using deep learning,ANN + Rerank,0.6,13060.14
+sentiment analysis using deep learning,ENN (Gold),1.0,101852.3
+deep learning,ANN,1.0,8412.09
+deep learning,ANN + Rerank,0.4,12294.74
+deep learning,ENN (Gold),1.0,100337.12
+quantum computing error correction,ANN,1.0,8259.53
+quantum computing error correction,ANN + Rerank,0.8,8670.67
+quantum computing error correction,ENN (Gold),1.0,102397.43
+attention,ANN,1.0,23183.51
+attention,ANN + Rerank,0.6,11259.76
+attention,ENN (Gold),1.0,121896.8

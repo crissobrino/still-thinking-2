@@ -2,11 +2,10 @@ import os
 import sys
 import json
 import requests as _req
-import ollama as _ollama
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 HERE = os.path.dirname(os.path.abspath(__file__))
-BACKEND = os.path.join(HERE, '..', 'backend-fastapi')
+BACKEND = os.path.join(HERE, '..', '..', '..', 'backend-fastapi')
 sys.path.insert(0, BACKEND)
 
 os.environ.setdefault("CHROMA_PATH", os.path.join(BACKEND, 'chroma_db'))
@@ -20,8 +19,8 @@ load_dotenv(os.path.join(BACKEND, '.env'))
 METRIC = "faithfulness"
 
 # Judge model:
-#   "full"   → gemma2:9b   (fast, different family from qwen3 pipeline)
-#   "strong" → llama4:16x17b  (stronger, different family from qwen3 pipeline)
+#   "full"   → qwen3:8b
+#   "strong" → qwen3:32b
 EVAL_MODE = "strong"
 
 # Set True to re-run the pipeline and overwrite the cache
@@ -29,34 +28,11 @@ FORCE_REFRESH = False
 
 # ── Backend imports ───────────────────────────────────────────────────────────
 from scripts.search_chroma import search
+from llm.client import UC3MClient
 from llm.prompts import build_comparison_prompt, build_system_prompt
 from llm.guardrails import should_refuse
 from llm.language import detect_language, get_language_name
 from deep_translator import GoogleTranslator
-
-_PIPELINE_MODEL = "qwen3:8b"
-_judge_model    = "gemma2:9b" if EVAL_MODE == "full" else "llama4:16x17b"
-_out_file       = f"automated_results_v2_{EVAL_MODE}_{METRIC}.csv"
-
-_ollama_key = os.environ["OLLAMA_API_KEY"]
-_ollama_url = os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es")
-
-# ── Pre-flight connectivity check ─────────────────────────────────────────────
-def _check_connection():
-    try:
-        r = _req.get(
-            f"{_ollama_url}/v1/models",
-            headers={"X-API-KEY": _ollama_key, "Authorization": f"Bearer {_ollama_key}"},
-            timeout=15,
-        )
-        r.raise_for_status()
-        models = [m["id"] for m in r.json().get("data", [])]
-        print(f"Server OK ({r.status_code}) — models: {models}")
-    except Exception as e:
-        print(f"ERROR: Cannot reach server: {e}")
-        sys.exit(1)
-
-_check_connection()
 
 # ── RAGAS judge setup ─────────────────────────────────────────────────────────
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -68,12 +44,19 @@ from ragas import evaluate
 from ragas.run_config import RunConfig
 from datasets import Dataset
 
+_judge_model = "qwen3:8b" if EVAL_MODE == "full" else "qwen3:32b"
+_out_file    = f"automated_results_{EVAL_MODE}_{METRIC}.csv"
+
+_ollama_key = os.environ["OLLAMA_API_KEY"]
+_ollama_url = os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es")
+
 evaluator_llm = LangchainLLMWrapper(
     ChatOpenAI(
         model=_judge_model,
         api_key=_ollama_key,
         base_url=f"{_ollama_url}/v1",
         default_headers={"X-API-KEY": _ollama_key},
+        model_kwargs={"extra_body": {"think": False}},
         timeout=300,
         max_retries=2,
     )
@@ -82,35 +65,42 @@ evaluator_embeddings = LangchainEmbeddingsWrapper(
     HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 )
 
+# ── Pre-flight connectivity check ─────────────────────────────────────────────
+def _check_connection():
+    try:
+        r = _req.get(
+            f"{_ollama_url}/v1/models",
+            headers={"X-API-KEY": _ollama_key, "Authorization": f"Bearer {_ollama_key}"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        models = [m["id"] for m in r.json().get("data", [])]
+        print(f"Judge server OK ({r.status_code}) — models: {models}")
+    except Exception as e:
+        print(f"ERROR: Cannot reach judge server: {e}")
+        sys.exit(1)
+
+_check_connection()
+
 # ── Test queries ──────────────────────────────────────────────────────────────
-_queries_path = os.path.join(HERE, "test_queries.json")
+_queries_path = os.path.join(HERE, '..', '..', 'test_queries.json')
 _query_data   = json.load(open(_queries_path))["queries"]
 TEST_QUERIES  = [q["query"]        for q in _query_data]
 QUERY_TYPES   = {q["query"]: q["type"]         for q in _query_data}
 GROUND_TRUTHS = {q["query"]: q["ground_truth"] for q in _query_data}
 
-# ── Pipeline — cached, uses qwen3:8b with thinking disabled ───────────────────
-CACHE_PATH = os.path.join(HERE, "pipeline_cache_v2.json")
+# ── Pipeline — cached to avoid re-running on every metric ─────────────────────
+CACHE_PATH = os.path.join(HERE, '..', 'results', 'pipeline_cache.json')
 
 if not FORCE_REFRESH and os.path.exists(CACHE_PATH):
     print("Loading pipeline results from cache...\n")
     collected = json.load(open(CACHE_PATH))
     refused   = []
 else:
-    _pipeline_client = _ollama.Client(host=_ollama_url, headers={"X-API-KEY": _ollama_key})
+    os.environ["OLLAMA_MODEL"] = "llama3.1:8b"
+    llm_client = UC3MClient()
 
-    def _pipeline_chat(user_prompt: str, system_prompt: str) -> str:
-        response = _pipeline_client.chat(
-            model=_PIPELINE_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_prompt},
-            ],
-            options={"temperature": 0.0, "think": False},
-        )
-        return response["message"]["content"]
-
-    print(f"Running pipeline for all test queries... [generator: {_PIPELINE_MODEL}]\n")
+    print("Running pipeline for all test queries... [generator: llama3.1:8b]\n")
     collected = {"question": [], "contexts": [], "answer": [], "ground_truth": []}
     refused   = []
 
@@ -134,7 +124,7 @@ else:
             f"\n[Article {i}]\nTitle: {r['title']}\nAbstract: {r['document']}\n"
             for i, r in enumerate(results, 1)
         )
-        answer = _pipeline_chat(
+        answer = llm_client.chat(
             user_prompt=build_comparison_prompt(query, context, lang_name),
             system_prompt=build_system_prompt(lang_name),
         )
@@ -183,6 +173,6 @@ for _, row in df.iterrows():
 print(f"\nAggregate {METRIC}: {results}")
 
 # ── Save to CSV ───────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, _out_file)
+out_path = os.path.join(HERE, '..', 'results', _out_file)
 results.to_pandas().to_csv(out_path, index=False)
 print(f"\nSaved to {out_path}")
