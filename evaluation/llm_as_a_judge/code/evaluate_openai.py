@@ -1,41 +1,40 @@
+"""
+RAGAS-based automated evaluation for the Still Thinking RAG pipeline.
+
+Runs one RAGAS metric per execution (set METRIC below). Pipeline outputs are cached
+so you don't have to re-run the expensive Qwen generation step on every evaluation.
+Results are saved incrementally after each query, so a crash mid-run loses nothing.
+
+Usage:
+    python evaluate_openai.py
+"""
+
 import os
 import sys
 import json
 import time
 import re
+import pandas as pd
 import ollama as _ollama
 
-# ── Path setup ────────────────────────────────────────────────────────────────
 HERE    = os.path.dirname(os.path.abspath(__file__))
 BACKEND = os.path.join(HERE, '..', '..', '..', 'backend-fastapi')
 sys.path.insert(0, BACKEND)
-
 os.environ.setdefault("CHROMA_PATH", os.path.join(BACKEND, 'chroma_db'))
 
 from dotenv import load_dotenv
 load_dotenv(os.path.join(BACKEND, '.env'))
 
-# ── Config ────────────────────────────────────────────────────────────────────
-# One metric per run — avoids RAGAS batching multiple metrics together
-METRIC = "context_recall"   # faithfulness | answer_relevancy | context_recall
+# --- Configuration ---
+# Set METRIC to one of: faithfulness | answer_relevancy | context_recall | context_precision
+METRIC         = "context_recall"
+JUDGE_MODEL    = "gpt-4o-mini"
+PIPELINE_MODEL = "qwen3:32b"   # "qwen3:8b" for the small model
+USE_RERANKER   = True           # fetch top-20, rerank with CrossEncoder, keep top-5
+FORCE_REFRESH  = True           # set False to reuse a cached pipeline run
+INTER_CALL_SLEEP = 5            # seconds between judge calls to stay within rate limits
 
-JUDGE_MODEL = "gpt-4o-mini"
-
-# Pipeline generator model: "small" → qwen3:8b | "big" → qwen3:32b
-PIPELINE_MODEL = "qwen3:32b"   # "qwen3:8b" | "qwen3:32b"
-
-# Short sleep between samples — OpenAI handles rate limits via max_retries
-INTER_CALL_SLEEP = 5
-
-# Set True to re-run the pipeline and overwrite the cache
-FORCE_REFRESH = True
-
-# Set True to use CrossEncoder reranking (fetch 20, rerank, keep top-5)
-USE_RERANKER = True
-
-_openai_key = os.environ["OPENAI_API_KEY"]
-
-# ── RAGAS judge setup ─────────────────────────────────────────────────────────
+# --- RAGAS judge setup ---
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_core.callbacks import BaseCallbackHandler
@@ -48,7 +47,8 @@ from datasets import Dataset
 
 
 class _ResponseCapture(BaseCallbackHandler):
-    """Collects all LLM responses during a RAGAS evaluate() call."""
+    """Captures raw LLM responses during RAGAS evaluation for logging purposes."""
+
     def __init__(self):
         self.responses: list[str] = []
 
@@ -71,7 +71,7 @@ _capture = _ResponseCapture()
 evaluator_llm = LangchainLLMWrapper(
     ChatOpenAI(
         model=JUDGE_MODEL,
-        api_key=_openai_key,
+        api_key=os.environ["OPENAI_API_KEY"],
         timeout=300,
         max_retries=3,
         callbacks=[_capture],
@@ -80,12 +80,7 @@ evaluator_llm = LangchainLLMWrapper(
 evaluator_embeddings = LangchainEmbeddingsWrapper(
     HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 )
-
-RUN_CFG = RunConfig(
-    timeout=300,
-    max_retries=3,
-    max_wait=120,
-)
+RUN_CFG = RunConfig(timeout=300, max_retries=3, max_wait=120)
 
 METRIC_MAP = {
     "faithfulness":      Faithfulness(llm=evaluator_llm),
@@ -98,15 +93,18 @@ if METRIC not in METRIC_MAP:
     print(f"Unknown metric '{METRIC}'. Choose from: {list(METRIC_MAP)}")
     sys.exit(1)
 
-# ── Test queries ──────────────────────────────────────────────────────────────
+# --- Load test queries ---
 _query_data   = json.load(open(os.path.join(HERE, '..', '..', 'test_queries.json')))["queries"]
-QUERY_TYPES   = {q["query"]: q["type"] for q in _query_data}
+QUERY_TYPES   = {q["query"]: q["type"]         for q in _query_data}
+GROUND_TRUTHS = {q["query"]: q["ground_truth"] for q in _query_data}
+TEST_QUERIES  = [q["query"] for q in _query_data]
 
-# ── Pipeline cache ────────────────────────────────────────────────────────────
+# Cache path encodes the model and retrieval config so runs don't overwrite each other
 _model_tag = PIPELINE_MODEL.replace(":", "-")
-_suffix    = ("_reranked" if USE_RERANKER else "")
+_suffix    = "_reranked" if USE_RERANKER else ""
 CACHE_PATH = os.path.join(HERE, '..', 'results', f'pipeline_cache_{_model_tag}{_suffix}.json')
 
+# --- Run or load the RAG pipeline ---
 if FORCE_REFRESH:
     from scripts.search_chroma import search as _search_fn
     from llm.prompts import build_comparison_prompt, build_system_prompt
@@ -123,16 +121,14 @@ if FORCE_REFRESH:
             device="cuda" if torch.cuda.is_available() else "cpu",
         )
 
-    _ollama_key = os.environ["OLLAMA_API_KEY"]
-    _ollama_url = os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es")
     _pipeline_client = _ollama.Client(
-        host=_ollama_url,
-        headers={"X-API-KEY": _ollama_key},
+        host=os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es"),
+        headers={"X-API-KEY": os.environ["OLLAMA_API_KEY"]},
         timeout=600,
     )
 
     def _pipeline_chat(user_prompt: str, system_prompt: str) -> str:
-        # stream=True keeps the connection alive through nginx's read timeout
+        # Streaming keeps the nginx connection alive for long-running 32b model calls
         chunks = _pipeline_client.chat(
             model=PIPELINE_MODEL,
             messages=[
@@ -144,31 +140,29 @@ if FORCE_REFRESH:
         )
         return "".join(c["message"]["content"] for c in chunks)
 
-    print(f"Running pipeline... [generator: {PIPELINE_MODEL}, reranker: {USE_RERANKER}]\n")
+    print(f"Running pipeline... [model: {PIPELINE_MODEL}, reranker: {USE_RERANKER}]\n")
     collected = {"question": [], "contexts": [], "answer": [], "ground_truth": []}
     refused   = []
-    _query_data_full = json.load(open(os.path.join(HERE, '..', '..', 'test_queries.json')))["queries"]
-    TEST_QUERIES  = [q["query"] for q in _query_data_full]
-    GROUND_TRUTHS = {q["query"]: q["ground_truth"] for q in _query_data_full}
 
     for query in TEST_QUERIES:
         print(f"  → {query[:70]}")
         lang_code = detect_language(query)
         lang_name = get_language_name(lang_code)
-        query_en  = (
-            GoogleTranslator(source='auto', target='en').translate(query)
-            if lang_code != 'en' else query
-        )
+        query_en  = GoogleTranslator(source='auto', target='en').translate(query) if lang_code != 'en' else query
+
         results = _search_fn(query_en, 20 if USE_RERANKER else 5)
         scores  = [1 - r['distance'] for r in results]
+
         if should_refuse(results, scores):
             print("    [REFUSED]")
             refused.append(query)
             continue
+
         if USE_RERANKER:
             pairs = [[query_en, r['document']] for r in results]
             rerank_scores = _reranker.predict(pairs)
             results = [r for r, s in sorted(zip(results, rerank_scores), key=lambda x: x[1], reverse=True)][:5]
+
         context = "".join(
             f"\n[Article {i}]\nTitle: {r['title']}\nAbstract: {r['document']}\n"
             for i, r in enumerate(results, 1)
@@ -185,8 +179,9 @@ if FORCE_REFRESH:
 
     json.dump(collected, open(CACHE_PATH, "w"))
     print(f"\nCollected {len(collected['question'])}, refused {len(refused)}\n")
+
 elif os.path.exists(CACHE_PATH):
-    print(f"Loading pipeline results from cache...\n")
+    print("Loading pipeline results from cache...\n")
     collected = json.load(open(CACHE_PATH))
 else:
     print("No pipeline cache found. Set FORCE_REFRESH = True to generate it.")
@@ -196,43 +191,44 @@ if not collected["question"]:
     print("No results to evaluate.")
     sys.exit(0)
 
-# Strip <think>...</think> blocks from pipeline answers before evaluation
+# Qwen3 sometimes emits <think>...</think> blocks before the actual answer
 collected["answer"] = [
     re.sub(r'<think>.*?</think>', '', a, flags=re.DOTALL).strip()
     for a in collected["answer"]
 ]
 
-# ── Evaluate one sample at a time ─────────────────────────────────────────────
-print(f"Evaluating [{METRIC}] sample-by-sample — judge: {JUDGE_MODEL}\n")
+# --- Evaluate sample by sample ---
+# We evaluate one query at a time rather than batching so we get per-query scores
+# and don't lose progress if the judge times out mid-run.
+print(f"Evaluating [{METRIC}] — judge: {JUDGE_MODEL}\n")
 
-import pandas as pd
-
-out_path = os.path.join(HERE, '..', 'results',
-    f"automated_results_openai_{JUDGE_MODEL.replace(':', '-')}_{METRIC}.csv")
-
-rows = []
-n    = len(collected["question"])
-t_total_start = time.perf_counter()
+out_path = os.path.join(
+    HERE, '..', 'results',
+    f"automated_results_openai_{JUDGE_MODEL.replace(':', '-')}_{METRIC}.csv"
+)
+rows    = []
+n       = len(collected["question"])
+t_start = time.perf_counter()
 
 for i in range(n):
     q   = collected["question"][i]
     tag = QUERY_TYPES.get(q, "unknown")
     print(f"[{i+1}/{n}] [{tag}] {q[:70]}")
 
-    # Expand the question to reflect the full task the system performs.
-    # A bare topic like "transformers for medical imaging" doesn't match the answer's
-    # structure (comparisons, differences, novelty). RAGAS reverse-question generation
-    # needs the full intent to score answer_relevancy correctly.
+    # RAGAS answer_relevancy scores by generating questions from the answer and checking
+    # if they match the input. A bare topic doesn't capture the actual task structure
+    # (compare, highlight differences, assess novelty), so we expand the question.
     full_question = (
         f"Given the research idea '{q}', compare it with retrieved academic articles: "
         f"identify what each article covers, highlight key differences between the idea "
         f"and the existing works, and assess possible novelty."
     )
+
+    # Prepending the user query as a context item lets the faithfulness judge verify
+    # comparative statements like "the user's idea differs from X" without marking
+    # them as hallucinations.
     single = Dataset.from_dict({
         "question":     [full_question],
-        # The user query is prepended as a context so the faithfulness judge can verify
-        # comparative statements ("the user's idea differs from..."). Without it,
-        # RAGAS penalizes valid comparative reasoning as hallucination.
         "contexts":     [[f"User research query: {q}"] + collected["contexts"][i]],
         "answer":       [collected["answer"][i]],
         "ground_truth": [collected["ground_truth"][i]],
@@ -268,13 +264,13 @@ for i in range(n):
         METRIC: score,
         f"{METRIC}_reason": reason,
     })
-    pd.DataFrame(rows).to_csv(out_path, index=False)
+    pd.DataFrame(rows).to_csv(out_path, index=False)  # incremental save
 
     if i < n - 1:
         time.sleep(INTER_CALL_SLEEP)
 
-# ── Aggregate ─────────────────────────────────────────────────────────────────
-total_elapsed = time.perf_counter() - t_total_start
+# --- Results ---
+total_elapsed = time.perf_counter() - t_start
 df   = pd.DataFrame(rows)
 vals = df[METRIC].dropna()
 print(f"\n--- AGGREGATE RESULTS ---")
