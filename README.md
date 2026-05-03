@@ -1,59 +1,228 @@
-# RagFrontend
+# Still_thinking — README Guide
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+## Overview
 
-## Development server
+**Still_thinking** is an academic research assistant built with Retrieval-Augmented Generation (RAG). Given a research idea or question, it retrieves semantically similar arXiv papers, re-ranks them, and uses an LLM to compare the idea against existing literature; highlighting novelty, differences, and related directions.
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
+## Architecture
+
+```
+User Query
+    │
+    ▼
+Angular Frontend (port 4200)
+    │  HTTP
+    ▼
+FastAPI Backend (port 8000)
+    ├── Language detection (langid)
+    ├── Guardrails (reject low-similarity queries)
+    ├── Vector Search (ChromaDB / SPECTER)
+    │     ├── ANN via HNSW (fast)
+    │     └── ENN via brute-force (exact)
+    ├── Re-ranking (CrossEncoder ms-marco-MiniLM-L-6-v2)
+    └── LLM generation (Qwen3:8b / Qwen3:32b via Ollama)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+**Corpus:** 103,260 arXiv abstracts indexed with `all-MiniLM-L6-v2` (384-dim embeddings) in ChromaDB.
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Repository Structure
 
-```bash
-ng generate component component-name
+```
+Still_thinking/
+├── backend-fastapi/          # Python FastAPI backend (RAG core)
+│   ├── main.py               # Server: /search, /summarize endpoints
+│   ├── llm/
+│   │   ├── client.py         # Ollama client wrappers (Qwen3:8b / 32b)
+│   │   ├── prompts.py        # Prompt template loader
+│   │   ├── language.py       # Language detection + multilingual support
+│   │   └── guardrails.py     # Low-confidence query rejection
+│   ├── scripts/
+│   │   ├── build_chroma.py   # One-time DB indexing pipeline
+│   │   ├── search_chroma.py  # ANN + ENN retrieval logic
+│   │   └── benchmark.py      # Performance benchmarking
+│   ├── prompts/              # Prompt template .txt files
+│   ├── chroma_db/            # Persistent ChromaDB vector store
+│   └── specter/              # Alternate SPECTER-based search backend
+├── src/                      # Angular 21 frontend
+│   └── app/
+│       ├── components/chat/  # Chat interface
+│       ├── components/landing/
+│       └── services/         # HTTP + theme services
+├── evaluation/               # Evaluation suite and results
+│   ├── main_eval.py          # Compares ANN / ANN+rerank / ENN+rerank
+│   ├── evaluation_utils.py   # NDCG, Precision@K, MRR
+│   ├── advanced_eval.py      # Guardrail, token efficiency, latency
+│   ├── generate_gold.py      # Gold standard generation
+│   ├── llm_as_a_judge/       # LLM-judged answer quality
+│   └── results/              # CSV results per experiment
+├── notes/                    # Evaluation reports & prompt-engineering notes
+├── requirements.txt          # Python dependencies
+├── package.json              # Node/Angular dependencies
+└── .env                      # Ollama credentials (not committed)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
+
+## Prerequisites
+
+| Tool | Version |
+|------|---------|
+| Python | 3.10+ |
+| Node.js | 18+ |
+| Angular CLI | 21 |
+| Access to UC3M Ollama gateway | (or local Ollama instance) |
+
+---
+
+## Setup
+
+### 1. Clone & configure environment
 
 ```bash
-ng generate --help
+git clone <repo-url>
+cd Still_thinking
 ```
 
-## Building
+Create a `.env` file in the root (and/or `backend-fastapi/`) with:
 
-To build the project run:
+```env
+OLLAMA_API_KEY=<your-key>
+OLLAMA_URL=https://yiyuan.tsc.uc3m.es
+OLLAMA_MODEL=qwen3:8b
+```
+
+### 2. Install Python dependencies
 
 ```bash
-ng build
+pip install -r requirements.txt
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### 3. Build the ChromaDB vector store (first run only)
 
 ```bash
-ng test
+cd backend-fastapi
+python scripts/build_chroma.py
 ```
 
-## Running end-to-end tests
+This indexes `papers_filtered.jsonl` (~103k abstracts) into `chroma_db/`. It is a one-time operation.
 
-For end-to-end (e2e) testing, run:
+### 4. Start the FastAPI backend
 
 ```bash
-ng e2e
+cd backend-fastapi
+uvicorn main:app --reload --port 8000
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### 5. Install frontend dependencies and start dev server
 
-## Additional Resources
+```bash
+npm install
+npx ng serve
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Open `http://localhost:4200` in your browser.
+
+---
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/search` | Retrieve + re-rank papers, then generate LLM comparison |
+| `POST` | `/summarize` | Summarize a single paper by abstract |
+| `POST` | `/summarize-detailed` | Generate a detailed structured summary |
+
+**Example `/search` request:**
+
+```json
+{
+  "query": "Using transformers for protein structure prediction",
+  "top_k": 5,
+  "use_reranker": true,
+  "use_enn": false
+}
+```
+
+---
+
+## Retrieval Modes
+
+| Mode | Description | Speed |
+|------|-------------|-------|
+| **ANN** | HNSW approximate nearest-neighbor search | Fast |
+| **ANN + Reranking** | ANN followed by CrossEncoder re-ranking | Medium |
+| **ENN + Reranking** | Exact brute-force search + CrossEncoder | Slow but most accurate |
+
+The production default is **ANN + Reranking**. ENN is used for gold-standard evaluation only.
+
+---
+
+## Multilingual Support
+
+Queries in Spanish, French, Italian, and German are automatically detected and translated to English for retrieval; the LLM response is then generated in the user's original language.
+
+---
+
+## Evaluation
+
+The [evaluation/](evaluation/) folder contains a full evaluation suite.
+
+```bash
+cd evaluation
+
+# Run main retrieval comparison (ANN vs ANN+rerank vs ENN+rerank)
+python main_eval.py
+
+# Run advanced tests (guardrails, token efficiency, latency)
+python advanced_eval.py
+
+# Generate gold standard (requires Qwen3:32b access)
+python generate_gold.py
+
+# LLM-as-judge quality evaluation
+cd llm_as_a_judge
+python run_judge.py
+```
+
+**Metrics computed:** NDCG@K, Precision@K, MRR, guardrail accuracy, token efficiency, latency.
+
+Results are saved as CSV files under [evaluation/results/](evaluation/results/).
+
+---
+
+## Frontend
+
+Built with **Angular 21** + **Tailwind CSS**. Key features:
+- Chat-style interface for iterative research queries
+- Per-paper on-demand summaries
+- PDF export of results
+- Graph visualization of paper relationships (vis-network)
+
+```bash
+npx ng build        # Production build → dist/
+npx ng test         # Unit tests (Vitest)
+```
+
+---
+
+## Models Used
+
+| Role | Model | Notes |
+|------|-------|-------|
+| Embeddings | `all-MiniLM-L6-v2` | 384-dim, sentence-transformers |
+| Re-ranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Pointwise relevance scoring |
+| LLM (fast) | `qwen3:8b` | Default generation model |
+| LLM (strong) | `qwen3:32b` | Used for gold standard + judge |
+| Alt. embeddings | SPECTER | 768-dim, separate backend in `specter/` |
+
+---
+
+## Notes & Reports
+
+Development notes and evaluation findings are in [notes/](notes/):
+- [evaluation_report.md](notes/evaluation_report.md) — Week-by-week evaluation results
+- [week1_prompt_tests.md](notes/week1_prompt_tests.md) — Prompt engineering iterations
