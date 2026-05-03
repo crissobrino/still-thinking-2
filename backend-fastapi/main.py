@@ -187,6 +187,11 @@ async def search_endpoint(request: SearchRequest):
         }
 
     metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
+
+    # Filter to only papers above the relevance threshold (same value as the guardrail)
+    RELEVANCE_THRESHOLD = 0.35
+    retrieved_ann = [doc for doc in retrieved_ann if doc["score"] >= RELEVANCE_THRESHOLD]
+
     # 4. Modo Evaluación ENN (Opcional)
     enn_docs = []
     if request.eval_mode:
