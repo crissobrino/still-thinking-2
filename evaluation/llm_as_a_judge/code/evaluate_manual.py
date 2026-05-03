@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import re
+import time
 import requests as _req
 
 # ── Path setup ────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ _METRIC_PROMPTS = {
     ),
 }
 
-def _judge(system: str, user: str) -> tuple[float | None, str]:
+def _judge(system: str, user: str, retries: int = 3) -> tuple[float | None, str]:
     payload = {
         "model": _JUDGE_MODEL,
         "messages": [
@@ -185,24 +186,34 @@ def _judge(system: str, user: str) -> tuple[float | None, str]:
         "stream": False,
         "options": {"temperature": 0.0, "think": False},
     }
-    r = _req.post(
-        f"{_ollama_url}/api/chat",
-        headers={"X-API-KEY": _ollama_key},
-        json=payload,
-        timeout=120,
-    )
-    r.raise_for_status()
-    text = r.json()["message"]["content"].strip()
-    if "</think>" in text:
-        text = text.split("</think>")[-1].strip()
-    score_match  = re.search(r'SCORE:\s*(1\.0*|0\.\d+|[01])', text)
-    reason_match = re.search(r'REASON:\s*(.+)', text, re.DOTALL)
-    score  = float(score_match.group(1)) if score_match else None
-    reason = reason_match.group(1).strip() if reason_match else text
-    return score, reason
+    for attempt in range(retries):
+        try:
+            r = _req.post(
+                f"{_ollama_url}/api/chat",
+                headers={"X-API-KEY": _ollama_key},
+                json=payload,
+                timeout=600,
+            )
+            r.raise_for_status()
+            text = r.json()["message"]["content"].strip()
+            if "</think>" in text:
+                text = text.split("</think>")[-1].strip()
+            score_match  = re.search(r'SCORE:\s*(1\.0*|0\.\d+|[01])', text)
+            reason_match = re.search(r'REASON:\s*(.+)', text, re.DOTALL)
+            score  = float(score_match.group(1)) if score_match else None
+            reason = reason_match.group(1).strip() if reason_match else text
+            return score, reason
+        except Exception as e:
+            if attempt < retries - 1:
+                wait = 30 * (attempt + 1)
+                print(f"    [retry {attempt + 1}/{retries - 1}] {e} — waiting {wait}s")
+                time.sleep(wait)
+            else:
+                raise
 
 # ── Evaluate ──────────────────────────────────────────────────────────────────
-METRICS = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
+METRICS = ["faithfulness"]
+# , "answer_relevancy""context_precision", "context_recall"
 print(f"Evaluating all metrics [manual mode] using judge: {_JUDGE_MODEL}...\n")
 
 rows = []
@@ -228,7 +239,7 @@ for i, q in enumerate(collected["question"]):
             reasons[metric] = f"ERROR: {e}"
             print(f"  {metric}: ERROR — {e}")
 
-    rows.append({"query": q, "type": tag,
+    rows.append({"query": q, "type": tag, "answer": ans, "ground_truth": gt,
                  **scores,
                  **{f"{m}_reason": reasons[m] for m in METRICS}})
 

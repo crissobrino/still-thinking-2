@@ -1,0 +1,18 @@
+RESEARCH QUERY:
+{q}
+
+SYSTEM RESPONSE:
+{ans}
+
+Evaluate whether the response above is relevant to the research query. Consider:
+- Does the response address the user's specific research topic?
+- Does it cover the expected sections (research direction, articles, differences, novelty, conclusion)?
+- Does it stay focused or drift to unrelated topics?
+
+REASON: <two or three sentences evaluating focus and section coverage>
+Research direction: X/10
+Relevant articles: X/10
+Key differences: X/10
+Possible novelty: X/10
+Conclusion: X/10
+SCORE: <total / 50>

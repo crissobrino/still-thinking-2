@@ -155,6 +155,13 @@ if METRIC not in METRIC_MAP:
     sys.exit(1)
 
 print(f"Evaluating with RAGAS [{METRIC}] using judge: {_judge_model}...")
+# The user query is prepended as a context so the faithfulness judge can verify
+# comparative statements ("the user's idea differs from..."). Without it,
+# RAGAS penalizes valid comparative reasoning as hallucination.
+collected["contexts"] = [
+    [f"User research query: {q}"] + ctxs
+    for q, ctxs in zip(collected["question"], collected["contexts"])
+]
 dataset = Dataset.from_dict(collected)
 results = evaluate(
     dataset=dataset,
