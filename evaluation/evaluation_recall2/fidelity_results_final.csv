@@ -1,0 +1,136 @@
+Query,K,Recall,ANN_Latency,ENN_Latency
+fine-tuning BERT for text classification tasks,1,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,2,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,3,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,4,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,5,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,6,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,7,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,8,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,9,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,10,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,11,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,12,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,13,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,14,1.0,117.87,94820.97
+fine-tuning BERT for text classification tasks,15,1.0,117.87,94820.97
+large language models for abstractive text summarization,1,1.0,120.62,94368.0
+large language models for abstractive text summarization,2,1.0,120.62,94368.0
+large language models for abstractive text summarization,3,1.0,120.62,94368.0
+large language models for abstractive text summarization,4,1.0,120.62,94368.0
+large language models for abstractive text summarization,5,1.0,120.62,94368.0
+large language models for abstractive text summarization,6,1.0,120.62,94368.0
+large language models for abstractive text summarization,7,1.0,120.62,94368.0
+large language models for abstractive text summarization,8,1.0,120.62,94368.0
+large language models for abstractive text summarization,9,1.0,120.62,94368.0
+large language models for abstractive text summarization,10,1.0,120.62,94368.0
+large language models for abstractive text summarization,11,1.0,120.62,94368.0
+large language models for abstractive text summarization,12,1.0,120.62,94368.0
+large language models for abstractive text summarization,13,1.0,120.62,94368.0
+large language models for abstractive text summarization,14,1.0,120.62,94368.0
+large language models for abstractive text summarization,15,1.0,120.62,94368.0
+aprendizaje automático para clasificación de texto,1,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,2,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,3,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,4,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,5,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,6,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,7,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,8,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,9,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,10,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,11,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,12,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,13,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,14,1.0,169.14,93917.85
+aprendizaje automático para clasificación de texto,15,1.0,169.14,93917.85
+redes neuronales para procesamiento del lenguaje natural,1,1.0,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,2,1.0,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,3,0.6666666666666666,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,4,0.75,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,5,0.8,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,6,0.8333333333333334,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,7,0.8571428571428571,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,8,0.875,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,9,0.8888888888888888,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,10,0.8,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,11,0.8181818181818182,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,12,0.8333333333333334,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,13,0.8461538461538461,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,14,0.8571428571428571,142.15,93523.55
+redes neuronales para procesamiento del lenguaje natural,15,0.8666666666666667,142.15,93523.55
+knowledge graph embeddings for link prediction,1,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,2,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,3,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,4,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,5,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,6,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,7,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,8,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,9,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,10,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,11,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,12,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,13,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,14,1.0,104.07,94539.9
+knowledge graph embeddings for link prediction,15,1.0,104.07,94539.9
+sentiment analysis using deep learning,1,1.0,110.78,94219.97
+sentiment analysis using deep learning,2,1.0,110.78,94219.97
+sentiment analysis using deep learning,3,1.0,110.78,94219.97
+sentiment analysis using deep learning,4,1.0,110.78,94219.97
+sentiment analysis using deep learning,5,1.0,110.78,94219.97
+sentiment analysis using deep learning,6,1.0,110.78,94219.97
+sentiment analysis using deep learning,7,1.0,110.78,94219.97
+sentiment analysis using deep learning,8,1.0,110.78,94219.97
+sentiment analysis using deep learning,9,1.0,110.78,94219.97
+sentiment analysis using deep learning,10,1.0,110.78,94219.97
+sentiment analysis using deep learning,11,1.0,110.78,94219.97
+sentiment analysis using deep learning,12,1.0,110.78,94219.97
+sentiment analysis using deep learning,13,1.0,110.78,94219.97
+sentiment analysis using deep learning,14,1.0,110.78,94219.97
+sentiment analysis using deep learning,15,1.0,110.78,94219.97
+deep learning,1,1.0,109.06,92801.07
+deep learning,2,1.0,109.06,92801.07
+deep learning,3,1.0,109.06,92801.07
+deep learning,4,1.0,109.06,92801.07
+deep learning,5,1.0,109.06,92801.07
+deep learning,6,1.0,109.06,92801.07
+deep learning,7,1.0,109.06,92801.07
+deep learning,8,1.0,109.06,92801.07
+deep learning,9,1.0,109.06,92801.07
+deep learning,10,1.0,109.06,92801.07
+deep learning,11,1.0,109.06,92801.07
+deep learning,12,0.9166666666666666,109.06,92801.07
+deep learning,13,0.9230769230769231,109.06,92801.07
+deep learning,14,0.9285714285714286,109.06,92801.07
+deep learning,15,0.9333333333333333,109.06,92801.07
+quantum computing error correction,1,1.0,105.9,92852.77
+quantum computing error correction,2,1.0,105.9,92852.77
+quantum computing error correction,3,1.0,105.9,92852.77
+quantum computing error correction,4,1.0,105.9,92852.77
+quantum computing error correction,5,1.0,105.9,92852.77
+quantum computing error correction,6,1.0,105.9,92852.77
+quantum computing error correction,7,1.0,105.9,92852.77
+quantum computing error correction,8,1.0,105.9,92852.77
+quantum computing error correction,9,1.0,105.9,92852.77
+quantum computing error correction,10,1.0,105.9,92852.77
+quantum computing error correction,11,1.0,105.9,92852.77
+quantum computing error correction,12,1.0,105.9,92852.77
+quantum computing error correction,13,1.0,105.9,92852.77
+quantum computing error correction,14,1.0,105.9,92852.77
+quantum computing error correction,15,1.0,105.9,92852.77
+attention,1,1.0,107.95,92576.51
+attention,2,1.0,107.95,92576.51
+attention,3,1.0,107.95,92576.51
+attention,4,1.0,107.95,92576.51
+attention,5,1.0,107.95,92576.51
+attention,6,1.0,107.95,92576.51
+attention,7,1.0,107.95,92576.51
+attention,8,1.0,107.95,92576.51
+attention,9,1.0,107.95,92576.51
+attention,10,1.0,107.95,92576.51
+attention,11,0.9090909090909091,107.95,92576.51
+attention,12,0.9166666666666666,107.95,92576.51
+attention,13,0.9230769230769231,107.95,92576.51
+attention,14,0.9285714285714286,107.95,92576.51
+attention,15,0.9333333333333333,107.95,92576.51
