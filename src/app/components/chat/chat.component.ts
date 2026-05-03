@@ -37,7 +37,7 @@ export class ChatComponent {
     private sanitizer: DomSanitizer 
   ) {}
 
-  // --- LÓGICA DEL GRAFO ---
+  // GRAPH LOGIC
 
   openGraphModal() {
     this.showGraph = true;
@@ -106,7 +106,7 @@ export class ChatComponent {
     new Network(container, { nodes: nodesArray, edges: edgesArray }, options);
   }
 
-  // --- LÓGICA DE MENSAJES ---
+  // MESSAGES LOGIC
 
   onSendMessage() {
     if (!this.userInput.trim() || this.isLoading) return;
@@ -168,7 +168,7 @@ export class ChatComponent {
     });
   }
 
-  // --- UTILIDADES ---
+  // UTILITIES
 
   viewSummary(article: Article) {
     if (!article.abstract || article.summary) return;

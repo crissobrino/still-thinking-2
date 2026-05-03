@@ -1,203 +1,121 @@
 """
-Precision@K evaluation for the Still_thinking RAG pipeline.
+Precision@K evaluation comparing ANN, ANN+Reranking, and ENN configurations.
 
-Precision@K = fraction of retrieved docs with similarity >= RELEVANCE_THRESHOLD.
+Requires the backend running at localhost:8000.
+Precision@K is measured two ways:
+  - score_based: fraction of retrieved docs with similarity >= RELEVANCE_THRESHOLD
+  - overlap:     fraction of retrieved docs that also appear in ENN results (gold standard proxy)
 
-Since no ground-truth relevance labels exist, similarity score is used as a proxy:
-a document is considered relevant if its score >= RELEVANCE_THRESHOLD (0.35),
-which matches the guardrails threshold already used in the pipeline.
-
-Data is pre-collected from actual backend runs — no live backend required.
 Results saved to evaluation/precision_results.csv.
 """
 
+import requests
 import pandas as pd
 from pathlib import Path
 
+BACKEND_URL = "http://localhost:8000/search"
 RELEVANCE_THRESHOLD = 0.35
+K = 5
 RESULTS_PATH = Path("evaluation/precision_results.csv")
 
-# Pre-collected from actual backend runs.
-# Replace scores and titles with real values from your system.
-# Format: (label, query, k, scores, titles)
-TEST_DATA = [
-    (
-        "Clear match – BERT fine-tuning",
-        "fine-tuning BERT for text classification tasks",
-        5,
-        [0.72, 0.68, 0.65, 0.61, 0.54],
-        [
-            "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
-            "Fine-Tuning Pretrained Language Models: Weight Initializations, Data Orders, and Early Stopping",
-            "How to Fine-Tune BERT for Text Classification?",
-            "Text Classification with Transformers",
-            "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
-        ],
-    ),
-    (
-        "Clear match – LLM summarization",
-        "large language models for abstractive text summarization",
-        5,
-        [0.70, 0.66, 0.63, 0.58, 0.51],
-        [
-            "Abstractive Text Summarization using Sequence-to-Sequence RNNs and Beyond",
-            "PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Summarization",
-            "A Survey of the State of Explainable AI for NLP",
-            "BART: Denoising Sequence-to-Sequence Pre-training for Natural Language Generation",
-            "T5: Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer",
-        ],
-    ),
-    (
-        "Clear match – Spanish query",
-        "aprendizaje automático para clasificación de texto",
-        5,
-        [0.65, 0.61, 0.58, 0.52, 0.47],
-        [
-            "Text Classification using Neural Networks",
-            "A Comparative Study of Machine Learning Methods for Text Classification",
-            "Deep Learning for Natural Language Processing",
-            "Multilingual BERT and Cross-lingual Transfer Learning",
-            "FastText: Bag of Tricks for Efficient Text Classification",
-        ],
-    ),
-    (
-        "Clear match – Spanish NLP",
-        "redes neuronales para procesamiento del lenguaje natural",
-        5,
-        [0.68, 0.64, 0.60, 0.55, 0.49],
-        [
-            "Neural Networks for Natural Language Processing",
-            "Recurrent Neural Network Based Language Model",
-            "Attention Is All You Need",
-            "A Survey on Deep Learning for Natural Language Processing",
-            "Word2Vec: Efficient Estimation of Word Representations in Vector Space",
-        ],
-    ),
-    (
-        "Clear match – knowledge graphs",
-        "knowledge graph embeddings for link prediction",
-        5,
-        [0.71, 0.67, 0.63, 0.59, 0.52],
-        [
-            "TransE: Translating Embeddings for Modeling Multi-relational Data",
-            "RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space",
-            "Knowledge Graph Embedding: A Survey of Approaches and Applications",
-            "Learning Entity and Relation Embeddings for Knowledge Graph Completion",
-            "ComplEx Embeddings for Simple Link Prediction",
-        ],
-    ),
-    (
-        "Clear match – sentiment analysis",
-        "sentiment analysis using deep learning",
-        5,
-        [0.69, 0.65, 0.61, 0.57, 0.50],
-        [
-            "Deep Learning for Sentiment Analysis: A Survey",
-            "Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank",
-            "Aspect-Based Sentiment Analysis with Gated Convolutional Networks",
-            "BERT for Sentiment Analysis",
-            "SemEval-2014 Task 4: Aspect Based Sentiment Analysis",
-        ],
-    ),
-    (
-        "Borderline – broad topic",
-        "deep learning",
-        5,
-        [0.48, 0.45, 0.41, 0.38, 0.34],
-        [
-            "Deep Learning",
-            "ImageNet Classification with Deep Convolutional Neural Networks",
-            "Deep Residual Learning for Image Recognition",
-            "Generative Adversarial Networks",
-            "An Introduction to Deep Learning",
-        ],
-    ),
-    (
-        "Weak match – unrelated domain",
-        "quantum computing error correction",
-        5,
-        [0.28, 0.24, 0.21, 0.18, 0.15],
-        [
-            "Quantum Error Correction: An Introductory Guide",
-            "Stabilizer Codes and Quantum Error Correction",
-            "Fault-Tolerant Quantum Computation",
-            "Surface Codes: Towards Practical Large-Scale Quantum Computation",
-            "Quantum Computing in the NISQ era and beyond",
-        ],
-    ),
-    (
-        "Weak match – very off-topic",
-        "history of the Roman Empire",
-        5,
-        [0.12, 0.10, 0.08, 0.07, 0.06],
-        [
-            "The Fall of the Roman Empire",
-            "Roman Military History",
-            "Augustus and the Roman Principate",
-            "The Roman Economy",
-            "Late Antiquity and the Transformation of Rome",
-        ],
-    ),
-    (
-        "Edge case – single word",
-        "attention",
-        3,
-        [0.55, 0.50, 0.44],
-        [
-            "Attention Is All You Need",
-            "Neural Machine Translation by Jointly Learning to Align and Translate",
-            "Self-Attention with Relative Position Representations",
-        ],
-    ),
+TEST_QUERIES = [
+    "fine-tuning BERT for text classification tasks",
+    "large language models for abstractive text summarization",
+    "aprendizaje automático para clasificación de texto",
+    "redes neuronales para procesamiento del lenguaje natural",
+    "knowledge graph embeddings for link prediction",
+    "sentiment analysis using deep learning",
+    "deep learning",
+    "quantum computing error correction",
+    "history of the Roman Empire",
+    "attention",
 ]
 
 
-def compute_precision_at_k(scores: list[float], threshold: float = RELEVANCE_THRESHOLD) -> float:
-    if not scores:
+def fetch(query: str, use_reranker: bool, eval_mode: bool) -> dict | None:
+    payload = {"query": query, "k": K, "use_reranker": use_reranker, "eval_mode": eval_mode}
+    try:
+        r = requests.post(BACKEND_URL, json=payload, timeout=60)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"  [error] {e}")
+        return None
+
+
+def precision_score_based(articles: list[dict]) -> float:
+    if not articles:
         return 0.0
-    relevant = sum(1 for s in scores if s >= threshold)
-    return round(relevant / len(scores), 4)
+    relevant = sum(1 for a in articles if a.get("score", 0) >= RELEVANCE_THRESHOLD)
+    return round(relevant / len(articles), 4)
+
+
+def precision_overlap(test_ids: list, gold_ids: list) -> float:
+    if not gold_ids or not test_ids:
+        return 0.0
+    return round(len(set(test_ids) & set(gold_ids)) / len(gold_ids), 4)
 
 
 def run() -> list[dict]:
-    results = []
-    for label, query, k, scores, titles in TEST_DATA:
-        precision = compute_precision_at_k(scores)
-        results.append({
-            "label": label,
-            "query": query,
-            "k": k,
-            "retrieved_k": len(scores),
-            "scores": scores,
-            "precision_at_k": precision,
-            "titles": titles,
-        })
-        print(f"[{label}]")
-        print(f"  Query: {query}")
-        print(f"  P@{k} = {precision} | scores = {scores}")
-        print()
-    return results
-
-
-def save_csv(results: list[dict]) -> None:
     rows = []
-    for r in results:
-        rows.append({
-            "label": r["label"],
-            "query": r["query"],
-            "k": r["k"],
-            "retrieved_k": r["retrieved_k"],
-            "precision_at_k": r["precision_at_k"],
-            "scores": str(r["scores"]),
-            "titles": " | ".join(r["titles"]),
-        })
 
+    for query in TEST_QUERIES:
+        print(f"\nQuery: {query}")
+
+        # Call 1: ANN + ENN (eval_mode gives us both in one request)
+        resp_ann = fetch(query, use_reranker=False, eval_mode=True)
+
+        # Call 2: ANN + Reranking
+        resp_rerank = fetch(query, use_reranker=True, eval_mode=False)
+
+        ann_articles    = resp_ann.get("articles", [])       if resp_ann    else []
+        enn_articles    = resp_ann.get("enn_articles", [])   if resp_ann    else []
+        rerank_articles = resp_rerank.get("articles", [])    if resp_rerank else []
+
+        ann_ids    = [a.get("id") for a in ann_articles]
+        enn_ids    = [a.get("id") for a in enn_articles]
+        rerank_ids = [a.get("id") for a in rerank_articles]
+
+        row = {
+            "query": query,
+            # ANN
+            "ANN_precision_score":   precision_score_based(ann_articles),
+            "ANN_precision_overlap": precision_overlap(ann_ids, enn_ids),
+            "ANN_latency_ms":        resp_ann.get("metrics", {}).get("ann_time") if resp_ann else None,
+            # ENN (gold standard — score-based only, overlap is 1.0 by definition)
+            "ENN_precision_score":   precision_score_based(enn_articles),
+            "ENN_latency_ms":        resp_ann.get("metrics", {}).get("enn_time") if resp_ann else None,
+            # ANN + Reranking
+            "Rerank_precision_score":   precision_score_based(rerank_articles),
+            "Rerank_precision_overlap": precision_overlap(rerank_ids, enn_ids),
+            "Rerank_latency_ms":        resp_rerank.get("metrics", {}).get("total_time") if resp_rerank else None,
+        }
+        rows.append(row)
+
+        print(f"  ANN:    P@{K}(score)={row['ANN_precision_score']}, P@{K}(overlap)={row['ANN_precision_overlap']}")
+        print(f"  ENN:    P@{K}(score)={row['ENN_precision_score']}")
+        print(f"  Rerank: P@{K}(score)={row['Rerank_precision_score']}, P@{K}(overlap)={row['Rerank_precision_overlap']}")
+
+    return rows
+
+
+def save_csv(rows: list[dict]) -> None:
     df = pd.DataFrame(rows)
-    mean_p = round(df["precision_at_k"].mean(), 4)
 
-    print("--- RESULTADOS DE EVALUACIÓN ---")
-    print(df[["label", "k", "precision_at_k"]].to_string(index=False))
-    print(f"\nMean Precision@K: {mean_p}")
+    print("\n--- RESULTADOS DE EVALUACIÓN ---")
+    summary_cols = [
+        "query",
+        "ANN_precision_score", "ANN_precision_overlap",
+        "ENN_precision_score",
+        "Rerank_precision_score", "Rerank_precision_overlap",
+    ]
+    print(df[summary_cols].to_string(index=False))
+
+    print("\n--- MEDIAS ---")
+    for col in ["ANN_precision_score", "ANN_precision_overlap",
+                "ENN_precision_score",
+                "Rerank_precision_score", "Rerank_precision_overlap"]:
+        print(f"  {col}: {df[col].mean():.4f}")
 
     df.to_csv(RESULTS_PATH, index=False)
     print(f"\nResults saved to {RESULTS_PATH}")

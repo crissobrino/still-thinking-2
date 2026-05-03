@@ -1,3 +1,0 @@
-query_en,lang,recall_vs_en,missing_ids,extra_ids,llm_ms,lang_detected,query_translated,status
-fine-tuning BERT for text classification tasks,en,1.0,[],[],11371.6,en,fine-tuning BERT for text classification tasks,SUCCESS
-fine-tuning BERT for text classification tasks,es,0.8,"[""2406.13827""]","[""1911.03918""]",8856.51,es,ajuste de BERT para tareas de clasificación de texto,SUCCESS

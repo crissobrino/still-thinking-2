@@ -7,6 +7,8 @@ from deep_translator import GoogleTranslator
 from contextlib import asynccontextmanager
 import torch
 import tiktoken
+from fastapi.responses import StreamingResponse 
+import json
 
 encoder = tiktoken.get_encoding("cl100k_base")
 
@@ -28,6 +30,7 @@ class SearchRequest(BaseModel):
     use_reranker: bool = False
     use_powerful_model: bool = False
     skip_llm: bool = False
+    stream: bool = False
 
 class SummarizeRequest(BaseModel):
 
@@ -234,7 +237,7 @@ async def search_endpoint(request: SearchRequest):
 
         metrics["llm_time"] = round((time.perf_counter() - t_llm) * 1000, 2)
         metrics["answer_tokens"] = len(encoder.encode(llm_res))
-        
+
     total_time = (time.perf_counter() - t_start) * 1000
     metrics["total_time"] = round(total_time, 2)
 
