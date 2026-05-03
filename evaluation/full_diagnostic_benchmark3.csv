@@ -1,0 +1,26 @@
+query_en,lang,status,total_ms,ann_ms,rerank_ms,guardrail_ms,llm_ms,context_tokens,answer_tokens,recall_vs_en,missing_ids,query_translated
+fine-tuning BERT for text classification tasks,en,SUCCESS,12816.69,48.62,11.75,0.0,12751.41,1053,502,1.0,[],fine-tuning BERT for text classification tasks
+fine-tuning BERT for text classification tasks,es,SUCCESS,14372.72,61.28,20.98,0.0,14146.65,1128,593,0.8,"[""2406.13827""]",ajuste de BERT para tareas de clasificación de texto
+fine-tuning BERT for text classification tasks,fr,SUCCESS,26554.55,62.07,31.46,0.0,26319.71,1040,717,0.6,"[""2307.11764"", ""2505.18215""]",affiner BERT pour les tâches de classification de texte
+fine-tuning BERT for text classification tasks,it,SUCCESS,9296.79,139.31,30.96,0.0,8938.55,1267,1099,0.2,"[""2002.10345"", ""2406.13827"", ""2307.11764"", ""2505.18215""]",messa a punto di BERT per attività di classificazione del testo
+fine-tuning BERT for text classification tasks,de,SUCCESS,7266.07,70.94,22.36,0.0,7028.35,1053,873,1.0,[],Feinabstimmung von BERT für Textklassifizierungsaufgaben
+large language models for abstractive text summarization,en,SUCCESS,8668.15,45.87,33.49,0.01,8468.06,1207,1044,1.0,[],large language models for abstractive text summarization
+large language models for abstractive text summarization,es,SUCCESS,10401.5,51.76,34.32,0.01,10171.25,1207,1253,1.0,[],Grandes modelos de lenguaje para resúmenes de textos abstractivos.
+large language models for abstractive text summarization,fr,SUCCESS,12533.19,45.59,29.16,0.01,11910.14,1046,1096,0.0,"[""2307.00963"", ""2502.00448"", ""2102.0449"", ""2305.04853"", ""2503.10233""]",grands modèles de langage pour la synthèse abstraite de textes
+large language models for abstractive text summarization,it,SUCCESS,17303.61,53.96,27.67,0.0,17049.07,1207,687,1.0,[],modelli linguistici di grandi dimensioni per il riepilogo astrattivo del testo
+large language models for abstractive text summarization,de,SUCCESS,10208.63,52.19,33.29,0.0,9987.63,1284,1232,0.6,"[""2503.10233"", ""2102.0449""]",große Sprachmodelle zur abstrakten Textzusammenfassung
+knowledge graph embeddings for link prediction,en,SUCCESS,7586.65,42.49,12.53,0.0,7525.58,1366,922,1.0,[],knowledge graph embeddings for link prediction
+knowledge graph embeddings for link prediction,es,SUCCESS,9197.76,42.08,28.32,0.01,8880.72,1456,1097,0.2,"[""2005.07654"", ""1906.08382"", ""1905.10702"", ""1911.0491""]",Incorporaciones de gráficos de conocimiento para la predicción de enlaces.
+knowledge graph embeddings for link prediction,fr,SUCCESS,8820.52,48.89,27.6,0.0,8593.45,1366,1052,1.0,[],intégrations de graphes de connaissances pour la prédiction de liens
+knowledge graph embeddings for link prediction,it,SUCCESS,9038.96,45.93,23.51,0.01,8761.78,1366,1081,1.0,[],incorporamenti del grafico della conoscenza per la previsione dei collegamenti
+knowledge graph embeddings for link prediction,de,SUCCESS,9113.04,50.29,18.85,0.0,8902.98,1366,949,1.0,[],Einbettungen von Wissensgraphen zur Linkvorhersage
+sentiment analysis using deep learning,en,SUCCESS,6785.85,36.3,14.87,0.0,6730.07,1256,824,1.0,[],sentiment analysis using deep learning
+sentiment analysis using deep learning,es,SUCCESS,18740.2,48.7,27.79,0.01,18473.66,1256,642,1.0,[],análisis de sentimientos mediante aprendizaje profundo
+sentiment analysis using deep learning,fr,SUCCESS,16382.25,54.07,30.22,0.01,16119.7,1256,629,1.0,[],analyse des sentiments à l'aide du deep learning
+sentiment analysis using deep learning,it,SUCCESS,34185.93,46.14,30.18,0.0,33888.21,1256,692,1.0,[],analisi del sentiment utilizzando il deep learning
+sentiment analysis using deep learning,de,SUCCESS,10101.0,56.3,22.41,0.01,9812.49,1256,974,1.0,[],Sentimentanalyse mittels Deep Learning
+deep learning,en,SUCCESS,12498.49,43.32,16.17,0.0,12433.63,1260,486,1.0,[],deep learning
+deep learning,es,SUCCESS,8488.49,54.36,32.41,0.0,8269.72,1260,1022,1.0,[],aprendizaje profundo
+deep learning,fr,SUCCESS,12688.93,48.78,32.51,0.0,12425.48,1260,1528,1.0,[],apprentissage profond
+deep learning,it,SUCCESS,7948.42,52.01,24.84,0.0,7738.0,1260,960,1.0,[],apprendimento profondo
+deep learning,de,SUCCESS,18344.97,48.8,32.17,0.0,18133.52,1260,2020,1.0,[],tiefes Lernen

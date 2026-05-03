@@ -7,7 +7,6 @@ configs = [
 ]
 
 ablation_data = []
-# (Asumiendo que tienes una lista de queries 'test_queries')
 for q in ["attention mechanism", "bert fine tuning"]:
     # Sacamos el Gold real primero para comparar
     gold_data, _ = call_rag(q, True, True)

@@ -18,6 +18,26 @@ class UC3MClient:
             headers={"X-API-KEY": self.api_key},
         )
 
+    def stream_chat(
+        self,
+        user_prompt: str,
+        system_prompt: str = "You are a helpful academic research assistant.",
+        model: str | None = None,
+        temperature: float = 0.0,
+    ):
+        # Usamos stream=True para recibir fragmentos
+        response = self.client.chat(
+            model=model or self.default_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            options={"temperature": temperature},
+            stream=True, 
+        )
+        for chunk in response:
+            yield chunk["message"]["content"]
+
     def chat(
         self,
         user_prompt: str,
@@ -49,6 +69,27 @@ class UC3MClient_large:
             host=self.base_url,
             headers={"X-API-KEY": self.api_key},
         )
+
+    #the following was to then incorporate streaming
+    def stream_chat(
+        self,
+        user_prompt: str,
+        system_prompt: str = "You are a helpful academic research assistant.",
+        model: str | None = None,
+        temperature: float = 0.0,
+    ):
+        # Usamos stream=True para recibir fragmentos
+        response = self.client.chat(
+            model=model or self.default_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            options={"temperature": temperature},
+            stream=True, 
+        )
+        for chunk in response:
+            yield chunk["message"]["content"]
 
     def chat(
         self,
