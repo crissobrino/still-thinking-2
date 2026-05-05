@@ -1,4 +1,4 @@
-import time
+﻿import time
 import sys
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -12,7 +12,7 @@ import json
 
 encoder = tiktoken.get_encoding("cl100k_base")
 
-# Ajuste de path e importaciones
+# Adjust paths and imports
 sys.path.append("/export/data_ml4ds/Neurocosas/others/nlp/Still_thinking/backend-fastapi")
 from scripts.search_chroma import search, search_enn
 from llm.client import UC3MClient, UC3MClient_large
@@ -40,22 +40,22 @@ class SummarizeRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Esto se ejecuta AL ARRANCAR el servidor
-    print("🔥 Calentando motores (Warm-up de Modelos)...")
+    # Runs on server startup to pre-load models and avoid cold-start latency on the first request.
+    print("Warming up models...")
     dummy_text = "This is a warm-up query."
-    
-    # 1. Calentamos Chroma y el modelo de Embeddings (all-MiniLM)
+
+    # 1. Warm up ChromaDB and the embedding model (all-MiniLM)
     try:
-        search(dummy_text, 1) 
+        search(dummy_text, 1)
     except Exception as e:
-        print("Aviso en warmup ANN:", e)
-        
-    # 2. Calentamos el Re-ranker (CrossEncoder) en la GPU
+        print("Warning during ANN warmup:", e)
+
+    # 2. Warm up the re-ranker (CrossEncoder) on the GPU
     reranker.predict([[dummy_text, dummy_text]])
-    
-    print("✅ ¡Sistemas 100% listos! La primera búsqueda será instantánea.")
+
+    print("All systems ready. The first search will be immediate.")
     yield
-    # (Lo que pongas después del yield se ejecutaría al apagar el servidor)
+    # Code after yield runs on server shutdown
 
 app = FastAPI(lifespan=lifespan)
 client = UC3MClient()
@@ -74,44 +74,44 @@ app.add_middleware(
 
 
 def process_results(results):
-    """Convierte la salida cruda de Chroma en una lista limpia de diccionarios, a prueba de fallos."""
+    """Convert raw Chroma output into a clean list of result dictionaries, with safe fallbacks for missing fields."""
     processed = []
     if not results: return processed
-    
-    # CASO 1: Formato de diccionario directo (Output de nuestro nuevo search_enn o search_ann crudo)
+
+    # Case 1: Raw dictionary format (output of search_enn or search_ann)
     if isinstance(results, dict) and 'ids' in results:
         ids = results.get('ids', [[]])[0]
-        
-        # Extraemos de forma segura comprobando que las listas existan
+
+        # Safely extract each field, guarding against absent or empty lists
         documents = results.get('documents', [[]])[0] if results.get('documents') else []
         metadatas = results.get('metadatas', [[]])[0] if results.get('metadatas') else []
         distances = results.get('distances', [[]])[0] if results.get('distances') else []
-        
+
         for i in range(len(ids)):
-            # Evitamos IndexError si por algún fallo de Chroma las listas tienen distinto tamaño
+            # Guard against IndexError if Chroma returns lists of mismatched length
             dist = distances[i] if i < len(distances) else 1.0
             meta = metadatas[i] if i < len(metadatas) and metadatas[i] is not None else {}
-            doc = documents[i] if i < len(documents) and documents[i] is not None else "Abstract no disponible."
-            
+            doc = documents[i] if i < len(documents) and documents[i] is not None else "Abstract not available."
+
             processed.append({
                 "id": ids[i],
-                "title": meta.get("title", f"Artículo {ids[i]}"),
+                "title": meta.get("title", f"Article {ids[i]}"),
                 "abstract": doc,
                 "score": 1 - dist,
-                "authors": meta.get("authors", "Desconocidos"),
-                "year": meta.get("update_date", "Desconocido")
+                "authors": meta.get("authors", "Unknown"),
+                "year": meta.get("update_date", "Unknown")
             })
-            
-    # CASO 2: Formato de lista (Output pre-procesado de tu función 'search()' normal)
+
+    # Case 2: Pre-processed list format (output of the standard search() function)
     elif isinstance(results, list):
         for item in results:
             processed.append({
                 "id": item.get('id'),
-                "title": item.get('title', 'Sin título'),
+                "title": item.get('title', 'Untitled'),
                 "abstract": item.get('abstract', item.get('document', '')),
                 "score": 1 - item.get('distance', 0),
-                "year": item.get('update_date', 'Desconocido'),
-                "authors": item.get('authors', 'Desconocidos')
+                "year": item.get('update_date', 'Unknown'),
+                "authors": item.get('authors', 'Unknown')
             })
             
     return processed
@@ -121,7 +121,7 @@ async def search_endpoint(request: SearchRequest):
     t_start = time.perf_counter()
     metrics = {}
     
-    # 1. Idioma y Traducción
+    # 1. Translation and language
     user_lang_code = detect_language(request.query)
     target_language_name = get_language_name(user_lang_code)
     
@@ -129,13 +129,12 @@ async def search_endpoint(request: SearchRequest):
     if user_lang_code != 'en':
         query_en = GoogleTranslator(source='auto', target='en').translate(request.query)
 
-    # 👇 LÓGICA TWO-STAGE: Si usamos re-ranker, pedimos 20 a Chroma. Si no, pedimos los que diga la request (5).
+    # Two-stage retrieval: fetch 20 candidates when re-ranking is enabled, otherwise use the requested k.
     initial_k = 20 if request.use_reranker else request.k
 
-
-    # 2. Búsqueda ANN Inicial
+    # 2. Initial ANN search
     t0 = time.perf_counter()
-    raw_ann = search(query_en, initial_k) # Usamos initial_k
+    raw_ann = search(query_en, initial_k)
     
     ann_time = (time.perf_counter() - t0) * 1000
     retrieved_ann = process_results(raw_ann)
@@ -143,42 +142,42 @@ async def search_endpoint(request: SearchRequest):
     
     metrics = {"ann_time": round(ann_time, 2)}
 
-    # 👇 NUEVO: 2.5 Re-ranking y Recorte (Opcional)
+    # 2.5. Re-ranking and trimming (optional)
     if request.use_reranker and len(retrieved_ann) > 0:
         t_rerank = time.perf_counter()
-        
-        # Preparamos los pares [Pregunta, Abstract]
+
+        # Build query–abstract pairs for the cross-encoder
         pairs = [[query_en, doc["abstract"]] for doc in retrieved_ann]
         scores = reranker.predict(pairs)
-        
-        # Actualizamos puntuaciones
+
+        # Update each document's score with the cross-encoder prediction
         for idx, doc in enumerate(retrieved_ann):
             doc["score"] = float(scores[idx])
-            
-        # Ordenamos de mayor a menor según la precisión del Cross-Encoder
+
+        # Sort by cross-encoder score, highest first
         retrieved_ann = sorted(retrieved_ann, key=lambda x: x["score"], reverse=True)
-        
+
         extended_articles = retrieved_ann[:30]
 
-        # RECORTE: Nos quedamos estrictamente con los mejores K (5)
+        # Trim to the top-k results
         retrieved_ann = retrieved_ann[:request.k]
         
         metrics["rerank_time"] = round((time.perf_counter() - t_rerank) * 1000, 2)
 
     t_guardrail_start = time.perf_counter()
-    # 3. Guardrails (Evalúa sobre la lista final de 5 documentos)
+    # 3. Guardrails (evaluated on the final top-k document list)
     scores_final = [doc["score"] for doc in retrieved_ann]
 
     if should_refuse(retrieved_ann, scores_final):
-        refusal = "I’m sorry, but I do not have any additional specific articles..."
+        refusal = "I'm sorry, but I do not have any additional specific articles..."
         if user_lang_code != 'en':
             refusal = GoogleTranslator(source='en', target=user_lang_code).translate(refusal)
-        
-        # Guardamos latencia del guardrail incluso si bloquea
+
+        # Record guardrail latency even when the request is refused
         metrics["guardrail_time"] = round((time.perf_counter() - t_guardrail_start) * 1000, 2)
         metrics["total_time"] = round((time.perf_counter() - t_start) * 1000, 2)
-        
-        # 👇 NUEVO: Añadimos las llaves con valor 0 para mantener la estructura
+
+        # Zero out token counts to maintain a consistent response structure
         metrics["context_tokens"] = 0
         metrics["answer_tokens"] = 0
         
@@ -196,11 +195,11 @@ async def search_endpoint(request: SearchRequest):
     RELEVANCE_THRESHOLD = 0.35
     retrieved_ann = [doc for doc in retrieved_ann if doc["score"] >= RELEVANCE_THRESHOLD]
 
-    # 4. Modo Evaluación ENN (Opcional)
+    # 4. ENN evaluation mode (optional)
     enn_docs = []
     if request.eval_mode:
         t1 = time.perf_counter()
-        raw_enn = search_enn(query_en, request.k) # ENN siempre busca K directamente
+        raw_enn = search_enn(query_en, request.k)  # ENN searches k directly without two-stage retrieval
         enn_time = (time.perf_counter() - t1) * 1000
 
         enn_docs = process_results(raw_enn)
@@ -215,8 +214,7 @@ async def search_endpoint(request: SearchRequest):
     for i, doc in enumerate(retrieved_ann, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"
 
-    # Calculamos tokens del contexto enviado al LLM
-    metrics["context_tokens"] = len(encoder.encode(context)) # <--- TOKENS ENTRADA
+    metrics["context_tokens"] = len(encoder.encode(context))
 
     if request.skip_llm:
         llm_res = "LLM Generation skipped for evaluation."
@@ -231,7 +229,7 @@ async def search_endpoint(request: SearchRequest):
             try:
                 llm_res = client2.chat(user_prompt=prompt, system_prompt=system_p, temperature=0.3)
             except Exception as e:
-                llm_res = "Error de conexión con modelo avanzado."
+                llm_res = "Connection error with the advanced model."
         else:
             llm_res = client.chat(user_prompt=prompt, system_prompt=system_p)
 
@@ -250,7 +248,6 @@ async def search_endpoint(request: SearchRequest):
         "language": user_lang_code
     }
 
-# Endpoint de resumen se mantiene igual...
 @app.post("/summarize")
 async def summarize_endpoint(request: SummarizeRequest):
     prompt = build_summarize_prompt(request.query, request.abstract, request.language)
