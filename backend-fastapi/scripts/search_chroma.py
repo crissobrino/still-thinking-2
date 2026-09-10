@@ -3,25 +3,9 @@ from pathlib import Path
 from chromadb import PersistentClient
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 import numpy as np
-from chromadb.utils import embedding_functions
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CHROMA_PATH = os.getenv("CHROMA_PATH", str(BASE_DIR / "chroma_db"))
-
-# Usamos el modelo por defecto de Chroma, pero lo forzamos a la gráfica
-try:
-    gpu_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2",
-        device="cuda" # <--- ¡AQUÍ ESTÁ LA MAGIA DE LA GPU!
-    )
-    print("Modelo de Embeddings cargado en la GPU (CUDA).")
-except Exception as e:
-    print(f"Aviso: No se pudo usar CUDA, cayendo a CPU. Error: {e}")
-    # Fallback a CPU por si la GPU de la UC3M está saturada por otros alumnos
-    gpu_embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2",
-        device="cpu" 
-    )
 
 client = PersistentClient(path=CHROMA_PATH)
 import torch
@@ -30,7 +14,7 @@ _ef = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2", device
 collection = client.get_collection("papers", embedding_function=_ef)
 
 def search_ann(query_text: str, k: int = 5):
-    """Búsqueda estándar de Chroma (usa HNSW/ANN)"""
+    """Standard Chroma search (uses HNSW/ANN)."""
     return collection.query(
         query_texts=[query_text],
         n_results=k,
@@ -38,40 +22,37 @@ def search_ann(query_text: str, k: int = 5):
     )
 
 def search_enn(query_text: str, k: int = 5):
-    """Búsqueda Exacta (Fuerza Bruta) obteniendo textos y metadatos"""
-    
+    """Exact (brute-force) search, returning documents and metadata."""
+
     all_embeddings = []
     all_ids = []
     all_documents = []
     all_metadatas = []
-    
+
     offset = 0
-    batch_size = 5000  # Lote seguro para no saturar SQLite
-    
-    # 1. Extraemos los datos por lotes
+    batch_size = 5000  # Safe batch size so we don't overload SQLite
+
+    # Pull the full collection out in batches
     while True:
         batch = collection.get(
             include=['embeddings', 'documents', 'metadatas'],
             limit=batch_size,
             offset=offset
         )
-        
-        # Si ya no hay IDs, hemos terminado de leer la base de datos
+
         if not batch['ids']:
             break
-            
+
         all_ids.extend(batch['ids'])
         all_embeddings.extend(batch['embeddings'])
-        
-        # Aseguramos que no sean nulos
+
         docs = batch.get('documents') or []
         metas = batch.get('metadatas') or []
         all_documents.extend(docs)
         all_metadatas.extend(metas)
-        
+
         offset += batch_size
 
-    # 2. Convertimos todo a arrays de Numpy
     np_embeddings = np.array(all_embeddings)
     np_ids = np.array(all_ids)
     np_documents = np.array(all_documents, dtype=object)
@@ -81,14 +62,10 @@ def search_enn(query_text: str, k: int = 5):
     query_embeddings = embedding_function([query_text])
     query_vec = np.array(query_embeddings[0])
 
-    
-   # 4. Cálculo de distancia L2 manual (ENN)
+    # Manual L2 distance (exact nearest neighbors)
     distances = np.linalg.norm(np_embeddings - query_vec, axis=1)
-    
-    # 5. Obtenemos los índices de los 'k' más cercanos
     idx_sorted = np.argsort(distances)[:k]
-    
-    # Devolvemos la estructura exacta que espera el main.py
+
     return {
         "ids": [np_ids[idx_sorted].tolist()],
         "distances": [distances[idx_sorted].tolist()],

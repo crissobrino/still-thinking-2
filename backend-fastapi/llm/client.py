@@ -4,14 +4,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class UC3MClient:
+    """Chat client for the UC3M Ollama gateway (default/fast model)."""
+
+    api_key_env = "OLLAMA_API_KEY"
+    url_env = "OLLAMA_URL"
+    model_env = "OLLAMA_MODEL"
+    default_model = "qwen3:8b"
+
     def __init__(self):
-        self.api_key = os.getenv("OLLAMA_API_KEY")
-        self.base_url = os.getenv("OLLAMA_URL", "https://yiyuan.tsc.uc3m.es")
-        self.default_model = os.getenv("OLLAMA_MODEL", "qwen3:8b")
+        self.api_key = os.getenv(self.api_key_env)
+        self.base_url = os.getenv(self.url_env, "https://yiyuan.tsc.uc3m.es")
+        self.default_model = os.getenv(self.model_env, self.default_model)
 
         if not self.api_key:
-            raise ValueError("OLLAMA_API_KEY not found in .env")
+            raise ValueError(f"{self.api_key_env} not found in .env")
 
         self.client = ollama.Client(
             host=self.base_url,
@@ -25,7 +33,6 @@ class UC3MClient:
         model: str | None = None,
         temperature: float = 0.0,
     ):
-        # Usamos stream=True para recibir fragmentos
         response = self.client.chat(
             model=model or self.default_model,
             messages=[
@@ -33,7 +40,7 @@ class UC3MClient:
                 {"role": "user", "content": user_prompt},
             ],
             options={"temperature": temperature},
-            stream=True, 
+            stream=True,
         )
         for chunk in response:
             yield chunk["message"]["content"]
@@ -54,56 +61,12 @@ class UC3MClient:
             options={"temperature": temperature},
         )
         return response["message"]["content"]
-    
 
-class UC3MClient_large:
-    def __init__(self):
-        self.api_key = os.getenv("OLLAMA_API_KEY2")
-        self.base_url = os.getenv("OLLAMA_URL2", "https://yiyuan.tsc.uc3m.es")
-        self.default_model = os.getenv("OLLAMA_MODEL2", "qwen3:32b")
 
-        if not self.api_key:
-            raise ValueError("OLLAMA_API_KEY not found in .env")
+class UC3MClient_large(UC3MClient):
+    """Same client, pointed at the larger model via the *2 env vars."""
 
-        self.client = ollama.Client(
-            host=self.base_url,
-            headers={"X-API-KEY": self.api_key},
-        )
-
-    #the following was to then incorporate streaming
-    def stream_chat(
-        self,
-        user_prompt: str,
-        system_prompt: str = "You are a helpful academic research assistant.",
-        model: str | None = None,
-        temperature: float = 0.0,
-    ):
-        # Usamos stream=True para recibir fragmentos
-        response = self.client.chat(
-            model=model or self.default_model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            options={"temperature": temperature},
-            stream=True, 
-        )
-        for chunk in response:
-            yield chunk["message"]["content"]
-
-    def chat(
-        self,
-        user_prompt: str,
-        system_prompt: str = "You are a helpful academic research assistant.",
-        model: str | None = None,
-        temperature: float = 0.0,
-    ) -> str:
-        response = self.client.chat(
-            model=model or self.default_model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            options={"temperature": temperature},
-        )
-        return response["message"]["content"]
+    api_key_env = "OLLAMA_API_KEY2"
+    url_env = "OLLAMA_URL2"
+    model_env = "OLLAMA_MODEL2"
+    default_model = "qwen3:32b"

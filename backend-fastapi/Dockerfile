@@ -16,6 +16,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY main.py .
 COPY scripts ./scripts
+COPY llm ./llm
+COPY prompts ./prompts
 
 EXPOSE 10000
 

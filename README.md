@@ -1,8 +1,8 @@
-# Still_thinking — README Guide
+# Still Thinking
 
 ## Overview
 
-**Still_thinking** is an academic research assistant built with Retrieval-Augmented Generation (RAG). Given a research idea or question, it retrieves semantically similar arXiv papers, re-ranks them, and uses an LLM to compare the idea against existing literature; highlighting novelty, differences, and related directions.
+**Still Thinking** is an academic research assistant built with Retrieval-Augmented Generation (RAG). Given a research idea or question, it retrieves semantically similar arXiv papers, re-ranks them, and uses an LLM to compare the idea against existing literature; highlighting novelty, differences, and related directions.
 
 ![Chat UI](docs/images/chat-ui.png)
 
@@ -20,7 +20,7 @@ Angular Frontend (port 4200)
 FastAPI Backend (port 8000)
     ├── Language detection (langid)
     ├── Guardrails (reject low-similarity queries)
-    ├── Vector Search (ChromaDB / SPECTER)
+    ├── Vector Search (ChromaDB, MiniLM embeddings)
     │     ├── ANN via HNSW (fast)
     │     └── ENN via brute-force (exact)
     ├── Re-ranking (CrossEncoder ms-marco-MiniLM-L-6-v2)
@@ -48,12 +48,12 @@ Still_thinking/
 │   │   └── benchmark.py      # Performance benchmarking
 │   ├── prompts/              # Prompt template .txt files
 │   ├── chroma_db/            # Persistent ChromaDB vector store
-│   └── specter/              # Alternate SPECTER-based search backend
+│   └── specter/              # Alt. SPECTER embeddings, used only by evaluation/compare_databases.py
 ├── src/                      # Angular 21 frontend
 │   └── app/
 │       ├── components/chat/  # Chat interface
 │       ├── components/landing/
-│       └── services/         # HTTP + theme services
+│       └── services/         # HTTP, theme, and language services
 ├── evaluation/               # Evaluation suite — see evaluation/README.md
 │   ├── main_eval.py          # Compares ANN / ANN+rerank / ENN+rerank
 │   ├── evaluation_utils.py   # NDCG, Precision@K, MRR
@@ -62,6 +62,7 @@ Still_thinking/
 │   ├── llm_as_a_judge/       # RAGAS LLM-judged answer quality + results
 │   └── EVALUATION_REPORT.md  # Full write-up of retrieval + generation evaluation
 ├── notes/                    # Week-by-week dev notes & prompt-engineering iterations
+├── docs/                     # README assets + the project report (docs/report/)
 ├── requirements.txt          # Python dependencies (standalone scripts)
 ├── package.json              # Node/Angular dependencies
 ├── LICENSE                   # MIT
@@ -75,7 +76,7 @@ Still_thinking/
 | Tool | Version |
 |------|---------|
 | Python | 3.10+ |
-| Node.js | 18+ |
+| Node.js | 20.19+ (required by Angular 21) |
 | Angular CLI | 21 |
 | Access to UC3M Ollama gateway | (or local Ollama instance) |
 
@@ -113,6 +114,10 @@ python scripts/build_chroma.py
 
 This indexes `papers_filtered.jsonl` (~103k abstracts) into `chroma_db/`. It is a one-time operation.
 
+> **Note:** `papers_filtered.jsonl` and the resulting `chroma_db/` are not included in this repo
+> (too large for git). To run retrieval locally, supply your own filtered arXiv abstract corpus
+> with `id`, `title`, `abstract`, `authors`, `categories`, `update_date` columns.
+
 ### 4. Start the FastAPI backend
 
 ```bash
@@ -136,17 +141,17 @@ Open `http://localhost:4200` in your browser.
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/search` | Retrieve + re-rank papers, then generate LLM comparison |
-| `POST` | `/summarize` | Summarize a single paper by abstract |
-| `POST` | `/summarize-detailed` | Generate a detailed structured summary |
+| `POST` | `/summarize` | Summarize a single paper by abstract, on demand |
 
 **Example `/search` request:**
 
 ```json
 {
   "query": "Using transformers for protein structure prediction",
-  "top_k": 5,
+  "k": 5,
   "use_reranker": true,
-  "use_enn": false
+  "use_powerful_model": false,
+  "eval_mode": false
 }
 ```
 
@@ -220,7 +225,7 @@ npx ng test         # Unit tests (Vitest)
 | Re-ranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Pointwise relevance scoring |
 | LLM (fast) | `qwen3:8b` | Default generation model |
 | LLM (strong) | `qwen3:32b` | Used for gold standard + judge |
-| Alt. embeddings | SPECTER | 768-dim, separate backend in `specter/` |
+| Alt. embeddings | SPECTER | 768-dim, evaluated in `backend-fastapi/specter/` but not used in production |
 
 ---
 
@@ -232,6 +237,8 @@ Development notes and week-by-week findings are in [notes/](notes/):
 - [week2_prompt_texts.md](notes/week2_prompt_texts.md) — Further prompt engineering iterations
 
 The final, comprehensive evaluation report is [evaluation/EVALUATION_REPORT.md](evaluation/EVALUATION_REPORT.md).
+
+The full academic write-up (IEEE format) is in [docs/report/](docs/report/NLP_Final_Project_2026.pdf).
 
 ---
 

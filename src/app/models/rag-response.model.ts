@@ -5,8 +5,8 @@ export interface Article {
   year?: number;
   abstract?: string;
   url?: string;
-  relevanceScore?: number; // El que usas en el HTML
-  score?: number;          // El que parece enviar el backend
+  relevanceScore?: number; // normalized score used in the template
+  score?: number;          // raw score sent by the backend
   keyDifference?: string;
   showAbstract?: boolean;
 

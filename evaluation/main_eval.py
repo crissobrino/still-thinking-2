@@ -12,10 +12,10 @@ def run_main_evaluation():
         gold_standard = json.load(f)
     
     results = []
-    print("🚀 Iniciando Evaluación Principal...")
+    print("🚀 Starting main evaluation...")
 
     for q, gold_ids in gold_standard.items():
-        # Configuraciones a comparar
+        # Configurations to compare
         configs = [
             ("ANN", False, False), 
             ("ANN+Rerank", False, True), 
@@ -38,18 +38,18 @@ def run_main_evaluation():
     df = pd.DataFrame(results)
     df.to_csv("evaluation/results_main.csv", index=False)
 
-    # Gráfico 1: Killer Chart con Error Bars (Seaborn lo hace solo)
+    # Chart 1: quality-by-configuration bar chart with error bars
     plt.figure(figsize=(10, 6))
     sns.barplot(x="Config", y="NDCG", data=df, capsize=.1, errorbar=('ci', 95))
-    plt.title("Killer Chart: Calidad por Configuración (CI 95%)")
+    plt.title("Quality by Configuration (CI 95%)")
     plt.savefig("evaluation/killer_chart.png")
 
-    # Gráfico 2: Latencia vs Calidad
+    # Chart 2: latency vs quality
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x="Latency", y="NDCG", hue="Config", s=150, data=df)
-    plt.title("Trade-off: Latencia vs Calidad")
+    plt.title("Trade-off: Latency vs Quality")
     plt.savefig("evaluation/latency_quality.png")
-    print("✅ Gráficos principales guardados.")
+    print("✅ Main charts saved.")
 
 if __name__ == "__main__":
     run_main_evaluation()

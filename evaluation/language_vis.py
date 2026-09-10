@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def analyze_benchmark(csv_file):
-    # 1. Cargar datos
+    # 1. Load data
     df = pd.read_csv(csv_file)
-    df = df[df['status'] == 'SUCCESS'] # Solo filas exitosas
-    
-    # 2. Métricas Globales
-    print("\n=== MÉTRICAS GLOBALES POR IDIOMA ===")
+    df = df[df['status'] == 'SUCCESS']  # only successful rows
+
+    # 2. Global metrics
+    print("\n=== GLOBAL METRICS BY LANGUAGE ===")
     global_stats = df.groupby('lang').agg({
         'total_ms': 'mean',
         'llm_ms': 'mean',
@@ -17,40 +17,40 @@ def analyze_benchmark(csv_file):
     }).round(2)
     print(global_stats)
 
-    # 3. Configuración de Gráficos
+    # 3. Chart setup
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
 
-    # Gráfico 1: Desglose de Tiempos (ANN vs Rerank vs LLM)
+    # Chart 1: Time breakdown (ANN vs rerank vs LLM)
     time_cols = ['ann_ms', 'rerank_ms', 'guardrail_ms', 'llm_ms']
-    df_melted = df.melt(id_vars='lang', value_vars=time_cols, var_name='Etapa', value_name='ms')
-    sns.barplot(data=df_melted, x='lang', y='ms', hue='Etapa', ax=axes[0,0])
-    axes[0,0].set_title("Desglose de Tiempos por Idioma")
+    df_melted = df.melt(id_vars='lang', value_vars=time_cols, var_name='Stage', value_name='ms')
+    sns.barplot(data=df_melted, x='lang', y='ms', hue='Stage', ax=axes[0,0])
+    axes[0,0].set_title("Time Breakdown by Language")
 
-    # Gráfico 2: Recall por Idioma (Consistencia Multilingüe)
+    # Chart 2: Recall by language (multilingual consistency)
     sns.line_marker = True
     sns.pointplot(data=df, x='lang', y='recall_vs_en', ax=axes[0,1], color='green')
-    axes[0,1].set_title("Recall vs Inglés (Consistencia de búsqueda)")
+    axes[0,1].set_title("Recall vs English (Search Consistency)")
     axes[0,1].set_ylim(0, 1.1)
 
-    # Gráfico 3: Correlación Tokens de Contexto vs Tiempo LLM
+    # Chart 3: Context tokens vs LLM time correlation
     sns.regplot(data=df, x='context_tokens', y='llm_ms', ax=axes[1,0], scatter_kws={'alpha':0.5})
-    axes[1,0].set_title("Influencia del Contexto (Tokens) en el Tiempo del LLM")
+    axes[1,0].set_title("Context Size (Tokens) Impact on LLM Time")
 
-    # Gráfico 4: Respuesta del LLM (Tokens de Salida vs Tiempo)
+    # Chart 4: LLM response (output tokens vs time)
     sns.scatterplot(data=df, x='answer_tokens', y='llm_ms', hue='lang', ax=axes[1,1])
-    axes[1,1].set_title("Longitud de Respuesta vs Tiempo LLM")
+    axes[1,1].set_title("Response Length vs LLM Time")
 
     plt.tight_layout()
     plt.show()
 
-    # 4. Análisis de Correlación
+    # 4. Correlation analysis
     correlation = df['context_tokens'].corr(df['llm_ms'])
-    print(f"\n💡 Coeficiente de correlación (Contexto vs Tiempo): {correlation:.2f}")
+    print(f"\n💡 Correlation coefficient (context vs time): {correlation:.2f}")
     if correlation > 0.7:
-        print("⚠️ El tamaño del contexto influye fuertemente en la latencia.")
+        print("⚠️ Context size has a strong influence on latency.")
     else:
-        print("✅ El tiempo del LLM parece ser independiente del tamaño del contexto (quizás domina la latencia de red o carga del modelo).")
+        print("✅ LLM time appears mostly independent of context size (likely dominated by network latency or model load).")
 
 if __name__ == "__main__":
     analyze_benchmark("full_diagnostic_benchmark3.csv")

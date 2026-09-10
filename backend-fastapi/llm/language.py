@@ -1,12 +1,12 @@
 import langid
 
 def detect_language(text: str) -> str:
-    # Retorna el código ISO (es, en, fr, de, etc.)
+    # Returns the ISO code (es, en, fr, de, etc.)
     lang, _ = langid.classify(text)
     return lang
 
 def get_language_name(lang_code: str) -> str:
-    # Mapeo para el prompt del LLM
+    # Maps the ISO code to the language name used in the LLM prompt
     names = {
         'es': 'Spanish',
         'en': 'English',

@@ -32,7 +32,9 @@ export class LanguageService {
       relevanceMap: 'Mapa de Relevancia',
       seeTop5: 'VER SOLO TOP-5',
       seeExtended: 'VER RED EXTENDIDA',
-      generatingGraph: 'Generando conexiones visuales...'
+      generatingGraph: 'Generando conexiones visuales...',
+      connectionError: 'Lo siento, hubo un error en la conexión.',
+      yourSearchNode: 'Tu Búsqueda'
     },
     en: {
       title: 'Research AI',
@@ -61,7 +63,9 @@ export class LanguageService {
       relevanceMap: 'Relevance Map',
       seeTop5: 'VIEW ONLY TOP-5',
       seeExtended: 'VIEW EXTENDED NETWORK',
-      generatingGraph: 'Generating visual connections...'
+      generatingGraph: 'Generating visual connections...',
+      connectionError: 'Sorry, there was a connection error.',
+      yourSearchNode: 'Your Search'
     },
     fr: {
       title: 'Recherche IA',
@@ -90,7 +94,9 @@ export class LanguageService {
       relevanceMap: 'Carte de Pertinence',
       seeTop5: 'VOIR UNIQUEMENT LE TOP-5',
       seeExtended: 'VOIR LE RÉSEAU ÉTENDU',
-      generatingGraph: 'Génération des connexions visuelles...'
+      generatingGraph: 'Génération des connexions visuelles...',
+      connectionError: 'Désolé, une erreur de connexion est survenue.',
+      yourSearchNode: 'Votre Recherche'
     }
   };
 

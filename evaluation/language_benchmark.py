@@ -4,7 +4,7 @@ import csv
 import os
 from deep_translator import GoogleTranslator
 
-# --- CONFIGURACIÓN ---
+# --- CONFIG ---
 API_URL = "http://localhost:8000/search"
 FILE_NAME = "full_diagnostic_benchmark3.csv"
 LANGUAGES = ['en', 'es', 'fr', 'it', 'de']
@@ -17,7 +17,7 @@ QUERIES_BASE = [
 ]
 
 def run_evaluation():
-    # Añadimos columnas de tokens
+    # Include token count columns
     fieldnames = [
         'query_en', 'lang', 'status', 'total_ms', 'ann_ms', 'rerank_ms', 
         'guardrail_ms', 'llm_ms', 'context_tokens', 'answer_tokens',
@@ -41,7 +41,7 @@ def run_evaluation():
                     ids = set(str(doc["id"]) for doc in data.get("articles", []))
                     group_results[lang] = {"ids": ids}
 
-                    # Análisis de Recall
+                    # Recall analysis
                     recall = 1.0
                     missing = []
                     if lang != 'en' and 'en' in group_results:
@@ -56,8 +56,8 @@ def run_evaluation():
                         'rerank_ms': m.get('rerank_time', 0),
                         'guardrail_ms': m.get('guardrail_time', 0),
                         'llm_ms': m.get('llm_time', 0),
-                        'context_tokens': m.get('context_tokens', 0), # <--- NUEVO
-                        'answer_tokens': m.get('answer_tokens', 0),   # <--- NUEVO
+                        'context_tokens': m.get('context_tokens', 0),
+                        'answer_tokens': m.get('answer_tokens', 0),
                         'recall_vs_en': round(recall, 2),
                         'missing_ids': json.dumps(missing),
                         'query_translated': query_tx

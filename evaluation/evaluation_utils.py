@@ -4,7 +4,7 @@ import numpy as np
 import time
 from pathlib import Path
 
-# --- CONFIGURACIÓN ---
+# --- CONFIG ---
 API_URL = "http://localhost:8000/search"
 OUTPUT_FILE = Path("evaluation/comparativo_modelos.csv")
 K_VAL = 5
@@ -33,18 +33,18 @@ def calculate_ndcg(gold_ids, test_ids):
     return dcg / idcg if idcg > 0 else 0
 
 def get_ndcg_with_confidence(scores, confidence=0.95):
-    # Simulación Bootstrap simple para el intervalo
+    # Simple bootstrap simulation for the confidence interval
     mean = np.mean(scores)
     std = np.std(scores)
-    # Intervalo aproximado (1.96 para 95% de confianza)
+    # Approximate interval (1.96 for 95% confidence)
     margin = 1.96 * (std / np.sqrt(len(scores)))
     return mean, mean - margin, mean + margin
-    
+
 def get_api_response(query, use_powerful, use_reranker):
     payload = {
         "query": query,
         "k": K_VAL,
-        "eval_mode": True, # Activamos para obtener también datos de ENN si hiciera falta
+        "eval_mode": True, # also enabled to get ENN data if needed
         "use_reranker": use_reranker,
         "use_powerful_model": use_powerful
     }
@@ -52,57 +52,57 @@ def get_api_response(query, use_powerful, use_reranker):
         response = requests.post(API_URL, json=payload)
         return response.json()
     except Exception as e:
-        print(f"Error llamando a la API: {e}")
+        print(f"Error calling the API: {e}")
         return None
 
 def calculate_metrics(gold_ids, test_ids, gold_scores):
     """
-    Compara la lista de IDs del modelo Test contra el Gold Standard.
+    Compares the test model's ID list against the gold standard.
     """
     if not gold_ids or not test_ids:
         return 0, 0, 0
 
-    # 1. Precision@K (¿Cuántos del test están en el gold?)
+    # 1. Precision@K (how many of the test results are in the gold set?)
     intersection = set(gold_ids) & set(test_ids)
     precision = round(len(intersection) / len(gold_ids), 4)
 
-    # 2. MRR (¿En qué posición está el #1 del Gold en nuestra lista Test?)
+    # 2. MRR (what rank is the gold #1 result at in the test list?)
     target_id = gold_ids[0]
     mrr = 0
     if target_id in test_ids:
         rank = test_ids.index(target_id) + 1
         mrr = round(1 / rank, 4)
 
-    # 3. NDCG@K (Calidad del ranking)
-    # Atribuimos relevancia según la posición en el Gold (5, 4, 3, 2, 1)
+    # 3. NDCG@K (ranking quality)
+    # Relevance is assigned by position in the gold list (5, 4, 3, 2, 1)
     relevance_map = {id: (len(gold_ids) - i) for i, id in enumerate(gold_ids)}
-    
-    # DCG del Test
+
+    # DCG of the test results
     dcg = 0
     for i, tid in enumerate(test_ids):
         rel = relevance_map.get(tid, 0)
         dcg += rel / np.log2(i + 2)
-    
-    # IDCG (El mejor orden posible, que es el del Gold)
+
+    # IDCG (best possible ordering, i.e. the gold order)
     idcg = 0
     for i in range(len(gold_ids)):
         rel = len(gold_ids) - i
         idcg += rel / np.log2(i + 2)
-    
+
     ndcg = round(dcg / idcg, 4) if idcg > 0 else 0
-    
+
     return precision, mrr, ndcg
 
 def main():
-    print(f"🚀 Iniciando evaluación de {len(QUERIES)} consultas...")
+    print(f"🚀 Starting evaluation of {len(QUERIES)} queries...")
     all_results = []
 
     for q in QUERIES:
-        print(f"🔍 Evaluando: {q}")
-        
-        # 1. Obtener el Gold Standard (Potente + Reranker)
+        print(f"🔍 Evaluating: {q}")
+
+        # 1. Get the gold standard (powerful model + reranker)
         gold_data = get_api_response(q, use_powerful=True, use_reranker=True)
-        # 2. Obtener el Candidato (Rápido + Reranker)
+        # 2. Get the candidate (fast model + reranker)
         test_data = get_api_response(q, use_powerful=False, use_reranker=True)
 
         if gold_data and test_data:
@@ -122,23 +122,23 @@ def main():
                 "Match_Count": len(set(gold_ids) & set(test_ids))
             })
 
-    # Crear DataFrame y guardar
+    # Build the DataFrame and save it
     df = pd.DataFrame(all_results)
     df = df.sort_values(by="NDCG@5", ascending=False)
-    
+
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(OUTPUT_FILE, index=False)
-    
+
     print("\n" + "="*40)
-    print("RESUMEN FINAL")
+    print("FINAL SUMMARY")
     print(df[["Query", "NDCG@5", "MRR"]].to_string(index=False))
-    print(f"\nMedia NDCG: {df['NDCG@5'].mean():.4f}")
-    print(f"Resultados exportados a: {OUTPUT_FILE}")
+    print(f"\nMean NDCG: {df['NDCG@5'].mean():.4f}")
+    print(f"Results exported to: {OUTPUT_FILE}")
 
 def check_hallucination(answer, articles):
     all_authors = " ".join([a['authors'] for a in articles]).lower()
-    # Esto es una simplificación; lo ideal es usar un LLM juez
-    # o buscar entidades (nombres) en el texto.
+    # This is a simplification; ideally this would use an LLM judge
+    # or look for named entities in the text.
     pass
 
 if __name__ == "__main__":

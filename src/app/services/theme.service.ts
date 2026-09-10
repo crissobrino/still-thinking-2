@@ -5,7 +5,6 @@ export class ThemeService {
   darkMode = signal<boolean>(false);
 
   constructor() {
-    // Este effect se ejecuta CADA VEZ que el signal darkMode cambia
     effect(() => {
       if (this.darkMode()) {
         document.documentElement.classList.add('dark');

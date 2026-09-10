@@ -96,14 +96,14 @@ def fetch_papers(query: str, k: int = 5) -> list[dict]:
     try:
         r = requests.post(BACKEND_URL, json={"query": query, "k": k}, timeout=30)
         r.raise_for_status()
-        results = r.json().get("results", [])
+        articles = r.json().get("articles", [])
         return [
             {
                 "title": doc["title"],
-                "abstract": doc["abstract_snippet"],
-                "score": round(1 - doc["distance"], 4),
+                "abstract": doc["abstract"],
+                "score": round(doc["score"], 4),
             }
-            for doc in results
+            for doc in articles
         ]
     except Exception as e:
         print(f"  [backend error] {e}")

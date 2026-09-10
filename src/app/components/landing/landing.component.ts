@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common'; // <--- Importante para directivas básicas
+import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../services/theme.service';
-import { LanguageService } from '../../../services/language.service'; // <--- Importa el servicio nuevo
+import { LanguageService } from '../../services/language.service';
 
 @Component({
   selector: 'app-landing',
@@ -12,7 +12,6 @@ import { LanguageService } from '../../../services/language.service'; // <--- Im
   styleUrls: ['./landing.css']
 })
 export class LandingComponent {
-  // Definimos el array con tipos literales exactos
   languages: ('es' | 'en' | 'fr')[] = ['es', 'en', 'fr'];
 
   constructor(

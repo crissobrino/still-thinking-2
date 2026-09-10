@@ -1,5 +1,4 @@
-﻿import time
-import sys
+import time
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,20 +6,17 @@ from deep_translator import GoogleTranslator
 from contextlib import asynccontextmanager
 import torch
 import tiktoken
-from fastapi.responses import StreamingResponse 
+from fastapi.responses import StreamingResponse
 import json
 
 encoder = tiktoken.get_encoding("cl100k_base")
 
-# Adjust paths and imports
-sys.path.append("/export/data_ml4ds/Neurocosas/others/nlp/Still_thinking/backend-fastapi")
 from scripts.search_chroma import search, search_enn
 from llm.client import UC3MClient, UC3MClient_large
 from llm.language import detect_language, get_language_name
 from llm.prompts import build_comparison_prompt, build_system_prompt, build_summarize_prompt
 from llm.guardrails import should_refuse
 from sentence_transformers import CrossEncoder
-import torch
 
 reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', activation_fn=torch.nn.Sigmoid(), device="cuda" if torch.cuda.is_available() else "cpu")
 class SearchRequest(BaseModel):
@@ -209,7 +205,7 @@ async def search_endpoint(request: SearchRequest):
         recall = len(ids_ann & ids_enn) / request.k if request.k > 0 else 0
         metrics.update({"enn_time": round(enn_time, 2), "recall": recall})
 
-    # 5. Generación LLM
+    # LLM generation
     context = ""
     for i, doc in enumerate(retrieved_ann, start=1):
         context += f"\n[Article {i}]\nTitle: {doc['title']}\nAbstract: {doc['abstract']}\n"

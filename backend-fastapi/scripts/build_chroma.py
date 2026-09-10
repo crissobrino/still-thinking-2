@@ -1,9 +1,12 @@
+from pathlib import Path
 import pandas as pd
+import torch
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-INPUT_PATH = "backend-fastapi/papers_filtered.jsonl"
-CHROMA_PATH = "backend-fastapi/chroma_db"
+BASE_DIR = Path(__file__).resolve().parent.parent
+INPUT_PATH = BASE_DIR / "papers_filtered.jsonl"
+CHROMA_PATH = str(BASE_DIR / "chroma_db")
 COLLECTION_NAME = "papers"
 BATCH_SIZE = 1000
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -60,7 +63,8 @@ def main():
         for _, row in df.iterrows()
     ]
 
-    ef = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL, device="cuda")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    ef = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL, device=device)
 
     client = chromadb.PersistentClient(path=CHROMA_PATH)
 

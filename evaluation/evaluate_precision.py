@@ -102,7 +102,7 @@ def run() -> list[dict]:
 def save_csv(rows: list[dict]) -> None:
     df = pd.DataFrame(rows)
 
-    print("\n--- RESULTADOS DE EVALUACIÓN ---")
+    print("\n--- EVALUATION RESULTS ---")
     summary_cols = [
         "query",
         "ANN_precision_score", "ANN_precision_overlap",
@@ -111,7 +111,7 @@ def save_csv(rows: list[dict]) -> None:
     ]
     print(df[summary_cols].to_string(index=False))
 
-    print("\n--- MEDIAS ---")
+    print("\n--- MEANS ---")
     for col in ["ANN_precision_score", "ANN_precision_overlap",
                 "ENN_precision_score",
                 "Rerank_precision_score", "Rerank_precision_overlap"]:

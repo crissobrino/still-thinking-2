@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { RagResponse, Article } from '../../models/rag-response.model';
 import { ThemeService } from '../../services/theme.service';
-import { LanguageService } from '../../../services/language.service';
+import { LanguageService } from '../../services/language.service';
 import { Router } from '@angular/router';
 import { Network } from 'vis-network';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -41,7 +41,7 @@ export class ChatComponent {
 
   openGraphModal() {
     this.showGraph = true;
-    // Pequeño delay para asegurar que el div 'mynetwork' existe en el DOM
+    // Small delay to make sure the 'mynetwork' div exists in the DOM
     setTimeout(() => this.renderGraph(), 50);
   }
 
@@ -54,36 +54,33 @@ export class ChatComponent {
     const container = document.getElementById('mynetwork');
     if (!container || !this.currentResponse) return;
 
-    // 1. Selección de datos: ¿Pintamos los 5 del chat o los 30 del mapa?
-    const articlesToRender = this.showingFullGraph 
+    // Show either the top 5 from the chat or the extended set of 30 on the full map
+    const articlesToRender = this.showingFullGraph
       ? (this.currentResponse.extended_articles || this.currentResponse.articles)
       : this.currentResponse.articles;
 
-    // 2. Nodo central
-    const nodesArray: any[] = [{ 
-      id: 0, 
-      label: 'Tu Búsqueda', 
-      color: '#4f46e5', 
-      font: { color: 'white', size: 16, bold: true }, 
+    const nodesArray: any[] = [{
+      id: 0,
+      label: this.lang.translate('yourSearchNode'),
+      color: '#4f46e5',
+      font: { color: 'white', size: 16, bold: true },
       shape: 'circle',
       shadow: true
     }];
 
-    // 3. Crear nodos de artículos
     articlesToRender.forEach((art, index) => {
-      const isExtra = this.showingFullGraph && index >= 5; // Diferenciamos visualmente los extras
+      const isExtra = this.showingFullGraph && index >= 5; // visually distinguish the extended nodes
       nodesArray.push({
         id: index + 1,
         label: art.title.substring(0, 25) + '...',
-        title: `<b>${art.title}</b><br>${art.authors} (${art.year})`, 
-        value: art.relevanceScore || 10, 
-        color: isExtra ? '#e2e8f0' : '#c7d2fe', // Gris para extras, azul para principales
+        title: `<b>${art.title}</b><br>${art.authors} (${art.year})`,
+        value: art.relevanceScore || 10,
+        color: isExtra ? '#e2e8f0' : '#c7d2fe', // gray for extras, blue for main results
         shape: 'dot',
         shadow: true
       });
     });
 
-    // 4. Crear conexiones
     const edgesArray = nodesArray.filter(n => n.id !== 0).map(n => ({
       from: 0,
       to: n.id,
@@ -96,7 +93,7 @@ export class ChatComponent {
       physics: {
         stabilization: true,
         barnesHut: { 
-          springLength: this.showingFullGraph ? 250 : 150, // Más espacio si hay muchos nodos
+          springLength: this.showingFullGraph ? 250 : 150, // more room when there are many nodes
           gravitationalConstant: -2000
         }
       },
@@ -123,15 +120,14 @@ export class ChatComponent {
         next: (response: RagResponse) => {
           try {
             let botText = response.answer || "";
-            // Limpiamos el rastro del "pensamiento" de modelos tipo DeepSeek/Qwen
+            // Strip the "thinking" trace some models (DeepSeek/Qwen-style) emit
             botText = botText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
-            // Procesamos los scores de todas las listas disponibles
             this.processArticleScores(response.articles);
             if (response.extended_articles) this.processArticleScores(response.extended_articles);
             if (response.enn_articles) this.processArticleScores(response.enn_articles);
 
-            // Lógica de "Key Difference" extraída del texto del bot
+            // Extract each article's "key difference" from the bot's free-text response
             response.articles.forEach(article => {
               const safeTitle = article.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               const regex = new RegExp(`${safeTitle}[^—\\-]*[—\\-]\\s*(.*?)(?:\\n|$)`, 'i');
@@ -151,8 +147,8 @@ export class ChatComponent {
           }
         },
         error: (err) => {
-          console.error("Error en búsqueda:", err);
-          this.messages.push({ text: "Lo siento, hubo un error en la conexión.", isUser: false });
+          console.error("Search error:", err);
+          this.messages.push({ text: this.lang.translate('connectionError'), isUser: false });
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -163,7 +159,7 @@ export class ChatComponent {
     if (!articles) return;
     articles.forEach(art => {
       let rawScore = art.score || art.relevanceScore || 0;
-      // Normalizamos a base 100 para el tamaño de las burbujas del grafo
+      // Normalize to a 0-100 scale for the graph bubble sizes
       art.relevanceScore = rawScore > 1 ? rawScore : rawScore * 100;
     });
   }

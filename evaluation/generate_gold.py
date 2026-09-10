@@ -3,7 +3,7 @@ import json
 import os
 
 API_URL = "http://localhost:8000/search"
-# Define aquí tus queries de investigación reales
+# Define your real research queries here
 #QUERIES = [
 #    "impact of deep learning in medical imaging",
 #    "attention mechanisms in transformer models",
@@ -27,34 +27,34 @@ QUERIES = [
 
 def generate_gold():
     gold_data = {}
-    print("🥇 Generando Gold Standard (Configuración Máxima)...")
-    
+    print("🥇 Generating gold standard (maximum config)...")
+
     if not os.path.exists("evaluation"): os.makedirs("evaluation")
 
     for q in QUERIES:
         try:
-            # Usamos eval_mode=True para ENN, use_powerful_model y use_reranker
+            # eval_mode=True for ENN, plus use_powerful_model and use_reranker
             payload = {
                 "query": q,
-                "use_powerful_model": True, 
-                "use_reranker": True, 
+                "use_powerful_model": True,
+                "use_reranker": True,
                 "eval_mode": True
             }
             resp = requests.post(API_URL, json=payload).json()
-            
-            # Guardamos los IDs de los artículos que el sistema "Gold" considera mejores
+
+            # Save the IDs of the articles the "gold" system considers best
             gold_ids = [art['id'] for art in resp.get('articles', [])]
             if gold_ids:
                 gold_data[q] = gold_ids
-                print(f"✅ Gold generado para: {q}")
+                print(f"✅ Gold generated for: {q}")
             else:
-                print(f"⚠️ Query '{q}' no devolvió resultados.")
+                print(f"⚠️ Query '{q}' returned no results.")
         except Exception as e:
-            print(f"❌ Error en query {q}: {e}")
+            print(f"❌ Error on query {q}: {e}")
 
     with open("evaluation/gold_standard.json", "w") as f:
         json.dump(gold_data, f, indent=4)
-    print("\n🔥 Archivo 'evaluation/gold_standard.json' creado con éxito.")
+    print("\n🔥 File 'evaluation/gold_standard.json' created successfully.")
 
 if __name__ == "__main__":
     generate_gold()

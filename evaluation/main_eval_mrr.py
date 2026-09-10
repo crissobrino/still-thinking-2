@@ -7,9 +7,9 @@ from evaluation_utils import calculate_ndcg
 
 API_URL = "http://localhost:8000/search"
 
-# --- NUEVA FUNCIÓN MRR ---
+# --- MRR FUNCTION ---
 def calculate_mrr(gold_ids, test_ids):
-    """Calcula el Reciprocal Rank para una query."""
+    """Computes the Reciprocal Rank for a single query."""
     if not gold_ids or not test_ids:
         return 0.0
     gold_set = set(gold_ids)
@@ -23,10 +23,10 @@ def run_main_evaluation():
         gold_standard = json.load(f)
     
     results = []
-    print("🚀 Iniciando Evaluación Principal (NDCG + MRR + Latencia)...")
+    print("🚀 Starting main evaluation (NDCG + MRR + latency)...")
 
     for q, gold_ids in gold_standard.items():
-        # Configuraciones a comparar
+        # Configurations to compare
         configs = [
             ("ANN", False, False), 
             ("ANN+Rerank", False, True), 
@@ -41,12 +41,12 @@ def run_main_evaluation():
                 "eval_mode": (name=="Gold (ENN+Rerank)")
             }).json()
             
-            # Nota: Si es eval_mode para el Gold Standard real de la API, asegúrate 
-            # de extraer los IDs de 'enn_articles' si tu API lo separa así. 
-            # Aquí mantengo tu lógica original leyendo de 'articles'.
+            # Note: if eval_mode is used for the API's real gold standard, make sure
+            # to pull IDs from 'enn_articles' if your API separates them that way.
+            # This keeps the original logic of reading from 'articles'.
             test_ids = [a['id'] for a in resp.get('articles', [])]
-            
-            # --- CÁLCULO DE MÉTRICAS ---
+
+            # --- METRIC CALCULATION ---
             ndcg = calculate_ndcg(gold_ids, test_ids)
             mrr = calculate_mrr(gold_ids, test_ids)
             
@@ -58,38 +58,38 @@ def run_main_evaluation():
                 "Latency": resp['metrics']['total_time']
             })
 
-    # Guardamos los resultados
+    # Save the results
     df = pd.DataFrame(results)
     df.to_csv("evaluation_mrrresults_main.csv", index=False)
 
-    # --- VISUALIZACIÓN ---
+    # --- VISUALIZATION ---
     sns.set_theme(style="whitegrid")
 
-    # Gráfico 1: Killer Chart NDCG
+    # Chart 1: NDCG bar chart
     plt.figure(figsize=(10, 6))
     sns.barplot(x="Config", y="NDCG", data=df, capsize=.1, errorbar=('ci', 95), palette="viridis")
-    plt.title("Calidad de Ranking Global: NDCG (CI 95%)")
+    plt.title("Overall Ranking Quality: NDCG (CI 95%)")
     plt.ylim(0, 1.05)
     plt.savefig("evaluation_mrrkiller_chart_ndcg.png")
 
-    # Gráfico 2: Killer Chart MRR (NUEVO)
+    # Chart 2: MRR bar chart
     plt.figure(figsize=(10, 6))
     sns.barplot(x="Config", y="MRR", data=df, capsize=.1, errorbar=('ci', 95), palette="magma")
-    plt.title("Precisión del Top 1: Mean Reciprocal Rank (CI 95%)")
+    plt.title("Top-1 Precision: Mean Reciprocal Rank (CI 95%)")
     plt.ylim(0, 1.05)
     plt.savefig("evaluation_mrrkiller_chart_mrr.png")
 
-    # Gráfico 3: Latencia vs NDCG
+    # Chart 3: latency vs NDCG
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x="Latency", y="NDCG", hue="Config", s=150, data=df, palette="deep")
-    plt.title("Trade-off: Latencia vs Calidad (NDCG)")
+    plt.title("Trade-off: Latency vs Quality (NDCG)")
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.savefig("evaluation_mrrlatency_quality.png")
-    
-    print("✅ Evaluación completada con éxito.")
-    print("\n📊 Resumen de Métricas Promedio:")
+
+    print("✅ Evaluation completed successfully.")
+    print("\n📊 Mean Metrics Summary:")
     print(df.groupby("Config")[["NDCG", "MRR", "Latency"]].mean())
-    print("\nGráficos guardados en la carpeta 'evaluation_mrr'.")
+    print("\nCharts saved in the 'evaluation_mrr' folder.")
 
 if __name__ == "__main__":
     run_main_evaluation()
