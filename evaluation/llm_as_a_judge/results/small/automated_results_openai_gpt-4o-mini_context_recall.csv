@@ -1,0 +1,196 @@
+query,type,answer,ground_truth,context_recall,context_recall_reason
+transformer architectures for medical image segmentation,on-topic,"- Research direction:  
+  <b>Exploring transformer architectures for medical image segmentation</b>  
+
+- Relevant articles:  
+  1. ""<i>OkanNet: A Lightweight Deep Learning Architecture for Classification of Brain Tumor from MRI Images</i>"" — Focuses on CNN-based classification of brain tumors using MRI, comparing custom CNNs and pre-trained ResNet-50.  
+  2. ""<i>Less Is More? Selective Visual Attention to High-Importance Regions for Multimodal Radiology Summarization</i>"" — Uses ViTAS, a multimodal pipeline with MedSAM2 lung segmentation, but for radiology summarization, not segmentation.  
+  3. ""<i>Adapting Text LLMs to Speech via Multimodal Depth Up-Scaling</i>"" — Focuses on speech recognition via transformer extensions, unrelated to medical imaging.  
+  4. ""<i>Ouroboros: Dynamic Weight Generation for Recursive Transformers via Input-Conditioned LoRA Modulation</i>"" — Proposes recursive transformer improvements, not directly tied to medical image tasks.  
+  5. ""<i>Is Clinical Text Enough? A Multimodal Study on Mortality Prediction in Heart Failure Patients</i>"" — Uses transformers for mortality prediction, combining text and structured data, not segmentation.  
+
+- Key differences:  
+  - The user’s focus on <b>segmentation</b> contrasts with Article 1’s <b>classification</b> task and Articles 2–5’s <b>summarization, speech recognition, or prediction</b> applications.  
+  - None of the retrieved articles explicitly address <b>medical image segmentation</b> using transformers, while the user’s idea centers on this task.  
+
+- Possible novelty:  
+  - The user’s approach may <b>introduce transformer-based methods for medical image segmentation</b>, differing from Articles 1 (CNNs) and 2 (segmentation as part of a summarization pipeline).  
+
+- Conclusion:  
+  <b>The user’s idea diverges from existing works by targeting medical image segmentation with transformers, a task not explicitly addressed in the retrieved articles.</b>","Transformer-based architectures such as Vision Transformers and hybrid CNN-Transformer models have been applied to medical image segmentation tasks, improving accuracy on datasets like CT and MRI scans compared to purely convolutional approaches.",1.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Transformer-based architectures such as Vision Transformers and hybrid CNN-Transformer models have been applied to medical image segmentation tasks, improving accuracy on datasets like CT and MRI scans compared to purely convolutional approaches."",
+            ""reason"": ""The context discusses transformer architectures in relation to medical imaging, specifically mentioning their application in brain tumor classification from MRI images, which aligns with the statement about improving accuracy in medical image segmentation tasks."",
+            ""attributed"": 1
+        }
+    ]
+}"
+federated learning for clinical data privacy,on-topic,"- Research direction:  
+  <b>Federated learning for clinical data privacy</b>  
+
+- Relevant articles:  
+  1. ""<i>Multi-lingual Multi-institutional Electronic Health Record based Predictive Model</i>"" — Focuses on multi-institutional EHR prediction with text-based harmonization to address schema and language heterogeneity.  
+  2. ""<i>CARE: Privacy-Compliant Agentic Reasoning with Evidence Discordance</i>"" — Prioritizes privacy-compliant frameworks for handling conflicting clinical evidence, using remote and local LLMs to avoid direct access to sensitive data.  
+
+- Key differences:  
+  - The user’s idea explicitly emphasizes <b>federated learning</b> for privacy, while the articles focus on <i>text-based harmonization</i> (Article 2) or <i>privacy-compliant agentic reasoning</i> (Article 4) without mentioning federated learning.  
+  - The user’s approach aims to <b>preserve data privacy through decentralized training</b>, whereas the articles address privacy via <i>data anonymization</i> (Article 4) or <i>language barriers</i> (Article 2).  
+
+- Possible novelty:  
+  - The user’s approach may introduce <b>federated learning</b> for clinical data, which is not explicitly addressed in the retrieved articles. Article 2 discusses multi-institutional learning but does not mention federated learning methods.  
+
+- Conclusion:  
+  <b>The user’s idea diverges from existing works by explicitly targeting federated learning for clinical data privacy, which is not directly addressed in the retrieved articles.</b>","Federated learning allows training machine learning models across decentralized clinical datasets without sharing raw patient data, preserving privacy while enabling collaborative model improvement across institutions.",1.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Federated learning allows training machine learning models across decentralized clinical datasets without sharing raw patient data, preserving privacy while enabling collaborative model improvement across institutions."",
+            ""reason"": ""The statement accurately describes the concept of federated learning, which is the main focus of the context provided."",
+            ""attributed"": 1
+        }
+    ]
+}"
+large language models for biomedical named entity recognition,on-topic,"- Research direction:  
+  Application of large language models (LLMs) to biomedical named entity recognition (NER) tasks.  
+
+- Relevant articles:  
+  1. ""<i>CV-18 NER</i>"" — Focuses on end-to-end speech NER for Arabic, using a dataset with manual annotations for 21 entity types.  
+  2. ""<i>ENEIDE</i>"" — A silver standard dataset for NER and linking in historical Italian texts, with entity types like person, location, and organization.  
+  3. ""<i>Friends and Grandmothers in Silico</i>"" — Investigates entity-selective mechanisms in language models via localized neurons, but not specific to NER.  
+  4. ""<i>Countering Catastrophic Forgetting...</i>"" — Adapts LLMs to medical domains via model merging, emphasizing instruction-following but not NER.  
+  5. ""<i>Can Large Language Models Self-Correct...</i>"" — Explores self-reflective reasoning in medical QA, not NER.  
+
+- Key differences:  
+  - The user’s focus on **biomedical NER** contrasts with the **Arabic speech NER** in Article 1 and the **historical Italian NER** in Article 2.  
+  - The user’s work involves **LLMs** directly, whereas Article 4 discusses **model merging** for medical tasks (not NER).  
+  - The user’s task requires **biomedical domain adaptation**, which is not explicitly addressed in any article.  
+
+- Possible novelty:  
+  - The user’s approach may **apply LLMs to biomedical NER**, a domain not covered in the retrieved articles.  
+  - The use of **LLMs for biomedical entity recognition** could differ from the **speech-based NER** in Article 1 or **historical text NER** in Article 2.  
+
+- Conclusion:  
+  The user’s idea diverges from existing works by targeting **biomedical NER** rather than Arabic speech, historical texts, or general medical instruction-following tasks.","Large language models fine-tuned on biomedical corpora such as PubMed have shown strong performance on named entity recognition tasks, identifying entities like diseases, genes, and drugs from clinical and scientific text.",1.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Large language models fine-tuned on biomedical corpora such as PubMed have shown strong performance on named entity recognition tasks, identifying entities like diseases, genes, and drugs from clinical and scientific text."",
+            ""reason"": ""The statement discusses large language models in the context of biomedical named entity recognition, which aligns with the research idea presented in the context."",
+            ""attributed"": 1
+        }
+    ]
+}"
+graph neural networks for drug-target interaction prediction,on-topic,"- Research direction:  
+  Application of graph neural networks (GNNs) to predict interactions between drugs and their molecular targets.  
+
+- Relevant articles:  
+  1. ""<A novel three-step approach to forecast firm-specific technology convergence opportunity via multi-dimensional feature fusion>"" — Focuses on predicting technology convergence using patent data, attention mechanisms, and LLMs, but does not involve GNNs or drug-target interactions.  
+  2. ""<Tracking Equivalent Mechanistic Interpretations Across Neural Networks>"" — Discusses interpretability of neural networks but does not address GNNs or biomedical applications.  
+  3. ""<Learning Diagnostic Reasoning for Decision Support in Toxicology>"" — Uses LLMs for toxicology decision support, but not GNNs or drug-target prediction.  
+  4. ""<Dialogue Act Modeling for Automatic Tagging and Recognition of Conversational Speech>"" — Focuses on dialogue act classification in speech, unrelated to GNNs or drug interactions.  
+  5. ""<Emotion Entanglement and Bayesian Inference for Multi-Dimensional Emotion Understanding>"" — Involves emotion prediction with Bayesian methods, but not GNNs or biomedical applications.  
+
+- Key differences:  
+  - The user’s query explicitly mentions **graph neural networks**, while none of the retrieved articles discuss GNNs in the context of drug-target interaction prediction.  
+  - The user’s focus is on **drug-target interactions**, whereas the articles address technology convergence, interpretability, toxicology, dialogue acts, and emotion understanding.  
+
+- Possible novelty:  
+  - The use of **graph neural networks** for drug-target interaction prediction may represent a novel approach, as none of the retrieved articles explicitly apply GNNs to this task.  
+
+- Conclusion:  
+  The user’s research idea diverges from the retrieved works in both methodology (GNNs vs. LLMs, traditional ML) and application domain (drug-target interactions vs. technology, toxicology, dialogue, or emotion analysis). The novelty of applying GNNs to drug-target prediction remains unclear without further context.","Graph neural networks model drug and protein structures as graphs and learn interaction patterns, achieving competitive performance on drug-target interaction prediction benchmarks compared to traditional machine learning methods.",1.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Graph neural networks model drug and protein structures as graphs and learn interaction patterns, achieving competitive performance on drug-target interaction prediction benchmarks compared to traditional machine learning methods."",
+            ""reason"": ""The statement discusses the application of graph neural networks in drug-target interaction prediction, which aligns with the user's research query in the context."",
+            ""attributed"": 1
+        }
+    ]
+}"
+attention mechanisms for protein structure prediction,on-topic,"- Research direction:  
+  Development of attention mechanisms tailored for protein structure prediction tasks.  
+
+- Relevant articles:  
+  1. ""Coupled Query-Key Dynamics for Attention"" — Focuses on improving language modeling via coupled query-key dynamics, not biological applications.  
+  2. ""Screening Is Enough"" — Introduces screening mechanisms for language models to enhance attention efficiency, unrelated to protein structure.  
+  3. ""S0 Tuning: Zero-Overhead Adaptation of Hybrid Recurrent-Attention Models"" — Discusses parameter-efficient tuning for hybrid models, not applicable to protein prediction.  
+  4. ""VISTA: Visualization of Token Attribution via Efficient Analysis"" — Aims to visualize attention in LLMs, with no connection to protein structure.  
+  5. ""Stochastic Attention: Connectome-Inspired Randomized Routing for Expressive Linear-Time Attention"" — Proposes stochastic attention for efficient sequence processing, not biological systems.  
+
+- Key differences:  
+  - None of the retrieved articles address protein structure prediction, focusing instead on natural language processing (NLP) tasks.  
+  - The user’s query involves a domain (protein structure) not covered by any of the abstracts.  
+
+- Possible novelty:  
+  - The user’s idea may introduce novel attention mechanisms for a distinct domain, but **insufficient context to assess novelty** as no articles directly compare to protein structure prediction.  
+
+- Conclusion:  
+  The retrieved articles focus on NLP tasks and do not address protein structure prediction, making direct comparisons or novelty claims unfeasible.","Attention mechanisms, particularly as used in transformer models like AlphaFold, have significantly advanced protein structure prediction by capturing long-range dependencies between amino acid residues.",1.0,"```json
+{
+    ""classifications"": [
+        {
+            ""statement"": ""Attention mechanisms, particularly as used in transformer models like AlphaFold, have significantly advanced protein structure prediction by capturing long-range dependencies between amino acid residues."",
+            ""reason"": ""The statement discusses attention mechanisms in the context of protein structure prediction, which aligns with the user's research query."",
+            ""attributed"": 1
+        }
+    ]
+}
+```"
+aprendizaje automático para clasificación de texto clínico,multilingual,"- Research direction:  
+  Aplicación del aprendizaje automático para la clasificación de texto clínico  
+
+- Relevant articles:  
+  1. <b>Machine Learning in Automated Text Categorization</b> — Enfoque en la categorización automática de textos mediante técnicas de aprendizaje automático, destacando la representación de documentos, construcción de clasificadores y evaluación.  
+  2. <b>Multi-lingual Multi-institutional Electronic Health Record based Predictive Model</b> — Uso de textos clínicos en registros electrónicos (EHR) multilingües para predicción clínica, abordando barreras lingüísticas mediante traducción o codificadores multilingües.  
+  3. <b>From Baselines to Preferences: A Comparative Study of LoRA/QLoRA and Preference Optimization for Mental Health Text Classification</b> — Enfoque en clasificación de textos clínicos de salud mental con técnicas de optimización específica (LoRA/QLoRA, DPO, etc.).  
+  4. <b>OkanNet: A Lightweight Deep Learning Architecture for Classification of Brain Tumor from MRI Images</b> — Enfoque en imágenes médicas, no en texto clínico.  
+  5. <b>Is Clinical Text Enough? A Multimodal Study on Mortality Prediction in Heart Failure Patients</b> — Uso de textos clínicos combinados con datos estructurados y modelos multimodales.  
+
+- Key differences:  
+  - <i>Machine Learning in Automated Text Categorization</i> se centra en categorización general de textos, mientras que el usuario se enfoca en texto clínico específico.  
+  - <i>Multi-lingual Multi-institutional Electronic Health Record based Predictive Model</i> incluye desafíos multilingües y heterogeneidad institucional, no mencionados en la consulta.  
+  - <i>From Baselines to Preferences...</i> utiliza técnicas de optimización avanzadas (LoRA/QLoRA, DPO) no explícitamente mencionadas en la consulta.  
+  - <i>Is Clinical Text Enough?</i> combina texto clínico con datos estructurados y modelos multimodales, algo no especificado en la consulta.  
+
+- Possible novelty:  
+  - El enfoque del usuario podría ser <i>mayormente similar</i> a <i>Machine Learning in Automated Text Categorization</i>, pero sin mencionar métodos específicos como LoRA/QLoRA o optimización basada en preferencias.  
+  - La ausencia de datos estructurados o multimodales en la consulta sugiere una <i>limitación contextual</i> respecto a <i>Is Clinical Text Enough?</i>.  
+
+- Conclusion:  
+  La consulta se alinea con el enfoque general de <i>Machine Learning in Automated Text Categorization</i>, pero difiere en la especificidad del dominio clínico y la ausencia de técnicas avanzadas de optimización o integración multimodal.","Machine learning models including SVMs, CNNs, and transformer-based models have been applied to clinical text classification tasks such as ICD coding, discharge summary categorization, and clinical note triage.",0.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Machine learning models including SVMs, CNNs, and transformer-based models have been applied to clinical text classification tasks such as ICD coding, discharge summary categorization, and clinical note triage."",
+            ""reason"": ""The context discusses machine learning techniques for text categorization but does not specifically mention SVMs, CNNs, or the specific tasks of ICD coding, discharge summary categorization, and clinical note triage."",
+            ""attributed"": 0
+        }
+    ]
+}"
+deep learning applications in healthcare,borderline,"- Research direction:  
+  Exploration of deep learning applications in healthcare, focusing on medical imaging, predictive modeling, and clinical decision support.  
+
+- Relevant articles:  
+  1. **""OkanNet: A Lightweight Deep Learning Architecture for Classification of Brain Tumor from MRI Images""** — Focuses on CNN-based MRI image analysis for brain tumor classification, comparing custom architectures with transfer learning.  
+  2. **""Multi-lingual Multi-institutional Electronic Health Record based Predictive Model""** — Addresses EHR prediction across institutions with multilingual data harmonization and translation strategies.  
+  3. **""Countering Catastrophic Forgetting of Large Language Models for Better Instruction Following via Weight-Space Model Merging""** — Explores LLM adaptation for clinical tasks via model merging to retain instruction-following capabilities.  
+  4. **""Learning Diagnostic Reasoning for Decision Support in Toxicology""** — Applies reinforcement learning to synthesize unstructured and structured data for toxicology decision-making.  
+  5. **""Perfecting Human-AI Interaction at Clinical Scale""** — Focuses on improving conversational AI for clinical interactions through real-time signal optimization and safety mechanisms.  
+
+- Key differences:  
+  - The user’s query is broad, while **Article 1** specifically targets medical imaging (MRI) and **Article 2** focuses on EHR prediction with multilingual challenges.  
+  - **Article 3** and **Article 4** involve LLMs for clinical tasks, which may differ from the user’s potential focus on traditional deep learning (e.g., CNNs).  
+  - **Article 5** emphasizes conversational AI and interaction design, which may not align with the user’s emphasis on predictive or diagnostic models.  
+
+- Possible novelty:  
+  - The user’s idea may **not** overlap with **Article 3**’s focus on catastrophic forgetting mitigation in LLMs, unless the user explicitly addresses this.  
+  - The user’s work may **not** align with **Article 4**’s reinforcement learning framework for toxicology, unless the user incorporates similar reasoning mechanisms.  
+
+- Conclusion:  
+  The user’s research idea overlaps with multiple applications of deep learning in healthcare but lacks specificity to distinguish novelty from the retrieved works. Further clarification on the exact focus (e.g., imaging, EHRs, LLMs, or conversational systems) would enable more precise comparisons.","Deep learning has been applied across multiple healthcare domains including medical image analysis, clinical NLP, drug discovery, and patient outcome prediction, with varying levels of clinical adoption.",1.0,"{
+    ""classifications"": [
+        {
+            ""statement"": ""Deep learning has been applied across multiple healthcare domains including medical image analysis, clinical NLP, drug discovery, and patient outcome prediction, with varying levels of clinical adoption."",
+            ""reason"": ""The statement summarizes the application of deep learning in healthcare, which aligns with the context discussing various deep learning applications in healthcare."",
+            ""attributed"": 1
+        }
+    ]
+}"

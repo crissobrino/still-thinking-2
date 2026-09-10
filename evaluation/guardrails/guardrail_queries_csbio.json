@@ -1,0 +1,39 @@
+{
+  "description": "Queries for guardrail threshold tuning. Corpus contains arXiv papers with any cs.* OR q-bio.* category (primary or cross-listed).",
+  "queries": [
+    {"query": "neural machine translation with attention mechanisms", "expected": "answer", "note": "cs.CL core"},
+    {"query": "convolutional neural networks for image classification", "expected": "answer", "note": "cs.CV core"},
+    {"query": "Byzantine fault tolerance in distributed systems", "expected": "answer", "note": "cs.DC core"},
+    {"query": "compiler optimizations for loop vectorization", "expected": "answer", "note": "cs.PL core"},
+    {"query": "public key cryptography and elliptic curve protocols", "expected": "answer", "note": "cs.CR core"},
+    {"query": "TCP congestion control algorithms", "expected": "answer", "note": "cs.NI core"},
+    {"query": "BM25 ranking for document retrieval", "expected": "answer", "note": "cs.IR core"},
+    {"query": "graph neural networks for knowledge graph completion", "expected": "answer", "note": "cs.LG core"},
+    {"query": "reinforcement learning for robotic manipulation", "expected": "answer", "note": "cs.RO + cs.LG core"},
+
+    {"query": "CRISPR gene editing mechanisms for cancer immunotherapy", "expected": "answer", "note": "q-bio.MN / q-bio.GN core"},
+    {"query": "epidemiological SIR models for infectious disease spread", "expected": "answer", "note": "q-bio.PE core"},
+    {"query": "computational neuroscience models of cortical circuits", "expected": "answer", "note": "q-bio.NC core"},
+    {"query": "single-cell RNA sequencing analysis pipelines", "expected": "answer", "note": "q-bio.GN core"},
+    {"query": "phylogenetic tree reconstruction from genomic data", "expected": "answer", "note": "q-bio.PE core"},
+
+    {"query": "deep learning for medical image segmentation", "expected": "answer", "note": "cs.CV + q-bio crossover — very common"},
+    {"query": "machine learning for drug-target interaction prediction", "expected": "answer", "note": "cs.LG + q-bio crossover — very common"},
+    {"query": "BERT for biomedical named entity recognition", "expected": "answer", "note": "cs.CL + q-bio crossover (BioBERT et al.)"},
+    {"query": "AlphaFold protein structure prediction", "expected": "answer", "note": "cs.LG + q-bio.BM crossover"},
+
+    {"query": "speech recognition with deep neural networks", "expected": "borderline", "note": "eess.AS primary but often cross-lists cs.CL"},
+    {"query": "quantum error correction with surface codes", "expected": "borderline", "note": "quant-ph primary but often cross-lists cs.IT"},
+    {"query": "OFDM signal processing for 5G wireless communications", "expected": "borderline", "note": "eess.SP primary, sometimes cross-lists cs.IT/cs.NI"},
+    {"query": "molecular dynamics simulations of biomolecules", "expected": "borderline", "note": "physics.bio-ph or chem-ph, sometimes cross-lists q-bio.BM"},
+
+    {"query": "synthesis of organic compounds using palladium catalysis", "expected": "refuse", "note": "synthetic chemistry — does not cross-list with cs/q-bio"},
+    {"query": "black hole thermodynamics and Hawking radiation", "expected": "refuse", "note": "astro-ph / gr-qc — no cs/q-bio overlap"},
+    {"query": "tectonic plate subduction and seismic wave propagation", "expected": "refuse", "note": "geoscience — no cs/q-bio overlap"},
+    {"query": "constitutional law and judicial review in federal systems", "expected": "refuse", "note": "law/humanities — no cs/q-bio overlap"},
+    {"query": "monetary policy and inflation targeting by central banks", "expected": "refuse", "note": "economics — no cs/q-bio overlap"},
+    {"query": "portfolio optimization using mean-variance analysis", "expected": "refuse", "note": "q-fin — does not cross-list with cs/q-bio"},
+    {"query": "graphene electronic band structure calculations", "expected": "refuse", "note": "cond-mat — no cs/q-bio overlap"},
+    {"query": "Higgs boson decay channels at the LHC", "expected": "refuse", "note": "hep-ph — no cs/q-bio overlap"}
+  ]
+}

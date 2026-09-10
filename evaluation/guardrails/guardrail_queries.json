@@ -1,0 +1,38 @@
+{
+  "description": "Queries for guardrail threshold tuning. Corpus contains arXiv papers with cs.CL OR cs.IR in any category (primary or cross-listed). 'borderline' = passes embedding threshold, LLM must decline. 'refuse' = caught by embedding threshold before reaching LLM.",
+  "queries": [
+    {"query": "neural machine translation with attention mechanisms", "expected": "answer", "note": "cs.CL core"},
+    {"query": "BERT fine-tuning for text classification", "expected": "answer", "note": "cs.CL core"},
+    {"query": "named entity recognition with transformer models", "expected": "answer", "note": "cs.CL core"},
+    {"query": "abstractive summarization with sequence to sequence models", "expected": "answer", "note": "cs.CL core"},
+    {"query": "topic modeling with latent dirichlet allocation", "expected": "answer", "note": "cs.CL / cs.IR core"},
+    {"query": "BM25 ranking for document retrieval", "expected": "answer", "note": "cs.IR core"},
+    {"query": "dense passage retrieval for open-domain question answering", "expected": "answer", "note": "cs.IR + cs.CL core"},
+    {"query": "collaborative filtering for recommender systems", "expected": "answer", "note": "cs.IR core"},
+    {"query": "learning to rank documents with listwise loss", "expected": "answer", "note": "cs.IR core"},
+
+    {"query": "speech recognition with deep neural networks", "expected": "borderline", "note": "eess.AS — passes embedding, LLM should answer (cross-lists cs.CL)"},
+    {"query": "graph neural networks for knowledge graph completion", "expected": "borderline", "note": "cs.LG — passes embedding, LLM should answer (cross-lists cs.CL)"},
+    {"query": "multimodal vision-language pretraining", "expected": "borderline", "note": "cs.CV — passes embedding, LLM should answer (cross-lists cs.CL)"},
+    {"query": "image captioning with encoder-decoder models", "expected": "borderline", "note": "cs.CV — passes embedding, LLM should answer (cross-lists cs.CL)"},
+
+    {"query": "convolutional neural networks for image classification", "expected": "borderline", "note": "cs.CV — passes embedding due to ML vocabulary, LLM should decline"},
+    {"query": "TCP congestion control algorithms", "expected": "borderline", "note": "cs.NI — passes embedding due to CS vocabulary, LLM should decline"},
+    {"query": "query optimization in relational database systems", "expected": "borderline", "note": "cs.DB — passes embedding due to 'query' overlap, LLM should decline"},
+    {"query": "Byzantine fault tolerance in distributed systems", "expected": "borderline", "note": "cs.DC — passes embedding due to CS vocabulary, LLM should decline"},
+    {"query": "constitutional law and judicial review in federal systems", "expected": "borderline", "note": "law — passes embedding due to shared vocabulary, LLM should decline"},
+    {"query": "computational neuroscience models of cortical circuits", "expected": "borderline", "note": "q-bio — passes embedding due to 'model' vocabulary, LLM should decline"},
+    {"query": "compiler optimizations for loop vectorization", "expected": "borderline", "note": "cs.PL — passes embedding due to CS vocabulary, LLM should decline"},
+    {"query": "portfolio optimization using mean-variance analysis", "expected": "borderline", "note": "finance — passes embedding due to 'optimization' vocabulary, LLM should decline"},
+    {"query": "quantum error correction with surface codes", "expected": "borderline", "note": "quant-ph — passes embedding due to CS-adjacent vocabulary, LLM should decline"},
+    {"query": "monetary policy and inflation targeting by central banks", "expected": "borderline", "note": "economics — passes embedding due to shared vocabulary, LLM should decline"},
+    {"query": "epidemiological SIR models for infectious disease spread", "expected": "borderline", "note": "biology — passes embedding due to 'model' vocabulary, LLM should decline"},
+
+    {"query": "black hole thermodynamics and Hawking radiation", "expected": "refuse", "note": "astrophysics — caught by embedding (score ~0.18)"},
+    {"query": "tectonic plate subduction and seismic wave propagation", "expected": "refuse", "note": "geoscience — caught by embedding (score ~0.18)"},
+    {"query": "CRISPR gene editing mechanisms for cancer immunotherapy", "expected": "refuse", "note": "molecular biology — caught by embedding (score ~0.17)"},
+    {"query": "synthesis of organic compounds using palladium catalysis", "expected": "refuse", "note": "chemistry — caught by embedding (score ~0.12)"},
+    {"query": "OFDM signal processing for 5G wireless communications", "expected": "refuse", "note": "eess.SP — caught by embedding (score ~0.11)"},
+    {"query": "public key cryptography and elliptic curve protocols", "expected": "refuse", "note": "cs.CR — caught by embedding (score ~0.10)"}
+  ]
+}

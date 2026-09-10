@@ -47,8 +47,7 @@ Thumbs.db
 /backend-fastapi/data
 /backend-fastapi/chroma_db
 /backend-fastapi/chroma_db_old
-*.jsonl
-*.json
+/backend-fastapi/papers_filtered.jsonl
 *.zip
 
 ##
@@ -56,8 +55,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-*.csv
-
-## 
+##
 CLAUDE.md
 /claude

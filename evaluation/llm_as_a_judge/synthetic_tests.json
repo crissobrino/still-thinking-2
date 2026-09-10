@@ -1,0 +1,57 @@
+[
+    {
+        "query": "transformer architectures for medical image segmentation",
+        "answer": "- Research direction:\n  Application of transformer architectures for medical image segmentation\n\n- Relevant articles:\n  1. \"OkanNet: A Lightweight Deep Learning Architecture for Classification of Brain Tumor from MRI Images\" — Focuses on CNN-based classification of brain tumors using ResNet-50 and custom CNNs, not segmentation.\n  2. \"Less Is More? Selective Visual Attention to High-Importance Regions for Multimodal Radiology Summarization\" — Uses MedSAM2 for lung segmentation as part of a summarization pipeline, but the primary task is report generation.\n  3. \"Is Clinical Text Enough? A Multimodal Study on Mortality Prediction in Heart Failure Patients\" — Uses transformers for mortality prediction with clinical text and structured data, not image segmentation.\n\n- Key differences:\n  - The user's focus on segmentation contrasts with Article 1's classification task and Articles 2 and 3's summarization and prediction tasks.\n  - None of the articles explicitly address transformer-based segmentation as the primary task.\n\n- Possible novelty:\n  - The user's approach may introduce transformer architectures to medical image segmentation, differing from Articles 1 (CNNs) and 2 (ViT for summarization).\n\n- Conclusion:\n  The user's idea diverges from existing works by focusing on transformer-based segmentation, whereas prior studies emphasize CNNs, summarization, or prediction tasks.",
+        "expected": "high"
+    },
+    {
+        "query": "transformer architectures for medical image segmentation",
+        "answer": "- Research direction:\n  Sentiment analysis for movie reviews\n\n- Relevant articles:\n  1. \"BERT for Sentiment Classification\" — fine-tunes BERT on IMDb reviews\n  2. \"Aspect-Based Sentiment Analysis\" — identifies opinion targets in text\n\n- Key differences:\n  - The user focuses on movie reviews while Article 1 targets product reviews\n  - Article 2 uses aspect-level granularity, unlike the user's document-level approach\n\n- Possible novelty:\n  - The user's approach may differ from Article 1 in domain specificity\n\n- Conclusion:\n  The user's idea diverges from existing sentiment analysis works in the movie domain.",
+        "expected": "low"
+    },
+    {
+        "query": "transformer architectures for medical image segmentation",
+        "answer": "- Research direction:\n  Application of transformer architectures for medical image segmentation\n\n- Relevant articles:\n  1. \"OkanNet\" — focuses on CNN-based brain tumor classification\n  2. \"Less Is More?\" — uses ViT for radiology summarization\n\n- Key differences:\n  - Not assessed.\n\n- Possible novelty:\n  - Not assessed.\n\n- Conclusion:\n  (No conclusion provided.)",
+        "expected": "low"
+    },
+    {
+        "query": "transformer architectures for medical image segmentation",
+        "answer": "- Research direction:\n  Application of transformer architectures for medical image segmentation\n\n- Relevant articles:\n  1. \"OkanNet\" — focuses on CNN-based brain tumor classification\n  2. \"Less Is More?\" — uses ViT for radiology summarization\n  3. \"Is Clinical Text Enough?\" — uses transformers for mortality prediction\n\n- Key differences:\n  - The user focuses on segmentation, while the articles address classification, summarization, and prediction tasks.\n\n- Possible novelty:\n  - The user's approach may differ from existing works in targeting segmentation specifically, though this is unclear from the retrieved articles.\n\n- Conclusion:\n  The user's idea diverges from the retrieved articles, which focus on other tasks.",
+        "expected": "high"
+    },
+    {
+        "query": "federated learning for clinical data privacy",
+        "answer": "- Research direction:\n  Federated learning for clinical data privacy\n\n- Relevant articles:\n  1. \"CARE: Privacy-Compliant Agentic Reasoning with Evidence Discordance\" — Addresses privacy in clinical settings by using a remote LLM for guidance without accessing sensitive patient data, but does not involve federated learning.\n  2. \"Multi-lingual Multi-institutional Electronic Health Record based Predictive Model\" — Discusses cross-institutional EHR prediction with language alignment, emphasizing data harmonization but not federated learning.\n\n- Key differences:\n  - The user's idea explicitly involves federated learning, which is not mentioned in any of the retrieved articles.\n  - The articles focus on privacy through non-access approaches or data harmonization, whereas the user's query centers on decentralized training.\n\n- Possible novelty:\n  - The user's approach may offer novelty in combining federated learning with clinical data privacy, as no article explicitly explores this intersection.\n\n- Conclusion:\n  The user's idea diverges from the retrieved works by focusing on federated learning for privacy, while the articles address privacy through other mechanisms.",
+        "expected": "high"
+    },
+    {
+        "query": "transformer architectures for medical image segmentation",
+        "answer": "- Research direction:\n  Application of transformer architectures for medical image segmentation\n\n- Relevant articles:\n  1. \"OkanNet\" — focuses on CNN-based brain tumor classification\n  2. \"Less Is More?\" — uses ViT for radiology summarization\n  3. \"Is Clinical Text Enough?\" — uses transformers for mortality prediction\n\n- Key differences:\n  - The user focuses on segmentation, while the articles address classification, summarization, and prediction tasks.\n\n- Possible novelty:\n  - The user's approach may differ from existing works in targeting segmentation specifically, though this is unclear from the retrieved articles.\n\n- Conclusion:\n  The user's idea diverges from the retrieved articles, which focus on other tasks.",
+        "expected": "high"
+    },
+    {
+        "query": "federated learning for clinical data privacy",
+        "answer": "- Research direction:\n  Federated learning for clinical data privacy\n\n- Relevant articles:\n  1. \"CARE\" — addresses privacy in clinical settings\n  2. \"Multi-lingual EHR\" — discusses cross-institutional prediction\n\n- Key differences:\n  - Not assessed in detail.\n\n- Possible novelty:\n  - May offer novelty but unclear without more context.\n\n- Conclusion:\n  The user's idea may differ from existing works.",
+        "expected": "mid"
+    },
+    {
+        "query": "graph neural networks for drug-target interaction prediction",
+        "answer": "- Research direction:\n  Application of GNNs to drug-target interaction prediction\n\n- Relevant articles:\n  1. \"Learning Diagnostic Reasoning\" — uses LLMs for toxicology, unrelated to GNNs\n  2. \"Tracking Mechanistic Interpretations\" — discusses neural network interpretability\n\n- Key differences:\n  - The retrieved articles focus on LLMs and interpretability rather than GNNs or drug interactions.\n\n- Possible novelty:\n  (section missing)\n\n- Conclusion:\n  (section missing)",
+        "expected": "mid"
+    },
+    {
+        "query": "attention mechanisms for protein structure prediction",
+        "answer": "- Research direction:\n  Application of attention mechanisms to protein structure prediction\n\n- Relevant articles:\n  1. \"Coupled Query-Key Dynamics\" — improves language modeling via attention, unrelated to biology\n  2. \"VISTA\" — visualizes attention in LLMs, no biological application\n\n- Key differences:\n  - Articles focus on NLP tasks, not protein structure prediction.\n  - No article addresses biological sequence modeling or structural biology.\n\n- Possible novelty:\n  (not assessed)\n\n- Conclusion:\n  The retrieved articles do not overlap with the user's research direction.",
+        "expected": "mid"
+    },
+    {
+        "query": "large language models for biomedical named entity recognition",
+        "answer": "- Research direction:\n  Large language models for biomedical NER\n\n- Relevant articles:\n  1. \"CV-18 NER\" — targets Arabic speech NER, not biomedical\n  2. \"ENEIDE\" — focuses on historical Italian NER\n\n- Key differences:\n  - Both articles address NER but in non-biomedical domains.\n\n- Possible novelty:\n  - The user's focus on biomedical NER may differ from the non-biomedical domains in the retrieved articles.\n\n- Conclusion:\n  (no conclusion provided)",
+        "expected": "mid"
+    },
+    {
+        "query": "graph neural networks for drug-target interaction prediction",
+        "answer": "- Research direction:\n  Application of graph neural networks (GNNs) to predict interactions between drugs and their molecular targets.\n\n- Relevant articles:\n  1. \"Learning Diagnostic Reasoning for Decision Support in Toxicology\" — Uses LLMs for toxicology decisions, unrelated to GNNs.\n  2. \"Emotion Entanglement and Bayesian Inference\" — Addresses emotion prediction, unrelated to GNNs or biomedical tasks.\n\n- Key differences:\n  - Insufficient context to draw specific differences, as none of the articles address GNNs or drug-target interactions.\n\n- Possible novelty:\n  - Insufficient context to assess novelty.\n\n- Conclusion:\n  The retrieved articles do not overlap with the user's research direction, making comparison impossible.",
+        "expected": "high"
+    }
+]

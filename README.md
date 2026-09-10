@@ -4,6 +4,8 @@
 
 **Still_thinking** is an academic research assistant built with Retrieval-Augmented Generation (RAG). Given a research idea or question, it retrieves semantically similar arXiv papers, re-ranks them, and uses an LLM to compare the idea against existing literature; highlighting novelty, differences, and related directions.
 
+![Chat UI](docs/images/chat-ui.png)
+
 ---
 
 ## Architecture
@@ -52,16 +54,17 @@ Still_thinking/
 │       ├── components/chat/  # Chat interface
 │       ├── components/landing/
 │       └── services/         # HTTP + theme services
-├── evaluation/               # Evaluation suite and results
+├── evaluation/               # Evaluation suite — see evaluation/README.md
 │   ├── main_eval.py          # Compares ANN / ANN+rerank / ENN+rerank
 │   ├── evaluation_utils.py   # NDCG, Precision@K, MRR
 │   ├── advanced_eval.py      # Guardrail, token efficiency, latency
 │   ├── generate_gold.py      # Gold standard generation
-│   ├── llm_as_a_judge/       # LLM-judged answer quality
-│   └── results/              # CSV results per experiment
-├── notes/                    # Evaluation reports & prompt-engineering notes
-├── requirements.txt          # Python dependencies
+│   ├── llm_as_a_judge/       # RAGAS LLM-judged answer quality + results
+│   └── EVALUATION_REPORT.md  # Full write-up of retrieval + generation evaluation
+├── notes/                    # Week-by-week dev notes & prompt-engineering iterations
+├── requirements.txt          # Python dependencies (standalone scripts)
 ├── package.json              # Node/Angular dependencies
+├── LICENSE                   # MIT
 └── .env                      # Ollama credentials (not committed)
 ```
 
@@ -169,7 +172,9 @@ Queries in Spanish, French, Italian, and German are automatically detected and t
 
 ## Evaluation
 
-The [evaluation/](evaluation/) folder contains a full evaluation suite.
+The [evaluation/](evaluation/) folder contains a full evaluation suite — see
+[evaluation/README.md](evaluation/README.md) for what each script measures and how to run it,
+and [evaluation/EVALUATION_REPORT.md](evaluation/EVALUATION_REPORT.md) for the full write-up.
 
 ```bash
 cd evaluation
@@ -182,15 +187,13 @@ python advanced_eval.py
 
 # Generate gold standard (requires Qwen3:32b access)
 python generate_gold.py
-
-# LLM-as-judge quality evaluation
-cd llm_as_a_judge
-python run_judge.py
 ```
 
-**Metrics computed:** NDCG@K, Precision@K, MRR, guardrail accuracy, token efficiency, latency.
+**Metrics computed:** NDCG@K, Precision@K, MRR, guardrail accuracy, token efficiency, latency,
+plus RAGAS-based faithfulness/answer-relevancy/context precision & recall under
+`evaluation/llm_as_a_judge/`.
 
-Results are saved as CSV files under [evaluation/results/](evaluation/results/).
+Results are saved under [evaluation/llm_as_a_judge/results/](evaluation/llm_as_a_judge/results/).
 
 ---
 
@@ -223,6 +226,15 @@ npx ng test         # Unit tests (Vitest)
 
 ## Notes & Reports
 
-Development notes and evaluation findings are in [notes/](notes/):
-- [evaluation_report.md](notes/evaluation_report.md) — Week-by-week evaluation results
+Development notes and week-by-week findings are in [notes/](notes/):
+- [evaluation_report.md](notes/evaluation_report.md) — Early-stage evaluation notes
 - [week1_prompt_tests.md](notes/week1_prompt_tests.md) — Prompt engineering iterations
+- [week2_prompt_texts.md](notes/week2_prompt_texts.md) — Further prompt engineering iterations
+
+The final, comprehensive evaluation report is [evaluation/EVALUATION_REPORT.md](evaluation/EVALUATION_REPORT.md).
+
+---
+
+## License
+
+[MIT](LICENSE)

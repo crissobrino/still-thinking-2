@@ -1,0 +1,49 @@
+{
+  "queries": [
+    {
+      "query": "transformer architectures for medical image segmentation",
+      "type": "on-topic",
+      "ground_truth": "Transformer-based architectures such as Vision Transformers and hybrid CNN-Transformer models have been applied to medical image segmentation tasks, improving accuracy on datasets like CT and MRI scans compared to purely convolutional approaches."
+    },
+    {
+      "query": "federated learning for clinical data privacy",
+      "type": "on-topic",
+      "ground_truth": "Federated learning allows training machine learning models across decentralized clinical datasets without sharing raw patient data, preserving privacy while enabling collaborative model improvement across institutions."
+    },
+    {
+      "query": "large language models for biomedical named entity recognition",
+      "type": "on-topic",
+      "ground_truth": "Large language models fine-tuned on biomedical corpora such as PubMed have shown strong performance on named entity recognition tasks, identifying entities like diseases, genes, and drugs from clinical and scientific text."
+    },
+    {
+      "query": "graph neural networks for drug-target interaction prediction",
+      "type": "on-topic",
+      "ground_truth": "Graph neural networks model drug and protein structures as graphs and learn interaction patterns, achieving competitive performance on drug-target interaction prediction benchmarks compared to traditional machine learning methods."
+    },
+    {
+      "query": "attention mechanisms for protein structure prediction",
+      "type": "on-topic",
+      "ground_truth": "Attention mechanisms, particularly as used in transformer models like AlphaFold, have significantly advanced protein structure prediction by capturing long-range dependencies between amino acid residues."
+    },
+    {
+      "query": "aprendizaje automático para clasificación de texto clínico",
+      "type": "multilingual",
+      "ground_truth": "Machine learning models including SVMs, CNNs, and transformer-based models have been applied to clinical text classification tasks such as ICD coding, discharge summary categorization, and clinical note triage."
+    },
+    {
+      "query": "deep learning applications in healthcare",
+      "type": "borderline",
+      "ground_truth": "Deep learning has been applied across multiple healthcare domains including medical image analysis, clinical NLP, drug discovery, and patient outcome prediction, with varying levels of clinical adoption."
+    },
+    {
+      "query": "history of the Roman Empire",
+      "type": "off-topic",
+      "ground_truth": "No relevant articles found in the corpus. This topic is outside the scope of the research database."
+    },
+    {
+      "query": "quantum computing error correction algorithms",
+      "type": "off-topic",
+      "ground_truth": "No relevant articles found in the corpus. This topic is outside the scope of the research database."
+    }
+  ]
+}
