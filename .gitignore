@@ -50,11 +50,11 @@ Thumbs.db
 /backend-fastapi/papers_filtered.jsonl
 *.zip
 
-##
+# Secrets / Python
 .env
 __pycache__/
 *.pyc
 
-##
+# Claude Code
 CLAUDE.md
-/claude
+/.claude

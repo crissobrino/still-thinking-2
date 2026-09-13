@@ -232,13 +232,13 @@ npx ng test         # Unit tests (Vitest)
 ## Notes & Reports
 
 Development notes and week-by-week findings are in [notes/](notes/):
-- [evaluation_report.md](notes/evaluation_report.md) — Early-stage evaluation notes
+- [early_eval_log.md](notes/early_eval_log.md) — Early-stage evaluation notes
 - [week1_prompt_tests.md](notes/week1_prompt_tests.md) — Prompt engineering iterations
 - [week2_prompt_texts.md](notes/week2_prompt_texts.md) — Further prompt engineering iterations
 
 The final, comprehensive evaluation report is [evaluation/EVALUATION_REPORT.md](evaluation/EVALUATION_REPORT.md).
 
-The full academic write-up (IEEE format) is in [docs/report/](docs/report/NLP_Final_Project_2026.pdf).
+The full academic write-up (IEEE format, the class-assignment deliverable) is in [docs/report/](docs/report/NLP_Final_Project_2026.pdf) — it summarizes the same project at a higher level; `evaluation/EVALUATION_REPORT.md` is the detailed technical record.
 
 ---
 

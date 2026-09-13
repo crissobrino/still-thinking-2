@@ -2,7 +2,7 @@
 Evaluation script for the full LLM + ChromaDB pipeline.
 
 Runs a set of test queries against the real backend, scores each response,
-and saves a Markdown report to notes/evaluation_report.md.
+and saves a Markdown report to notes/early_eval_log.md.
 
 Scores computed per response:
   - retrieved_k         : number of papers actually returned
@@ -31,7 +31,7 @@ from llm.guardrails import should_refuse
 
 
 BACKEND_URL = "http://localhost:8000/search"
-DEFAULT_REPORT_PATH = "notes/evaluation_report.md"
+DEFAULT_REPORT_PATH = "notes/early_eval_log.md"
 
 # Reuse the LLM client to translate non-English queries before backend search.
 # The ChromaDB embeddings were built on English text, so non-English queries
