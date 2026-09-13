@@ -87,7 +87,7 @@ The very first attempt used the Groq API (`console.groq.com`) with a redirected 
 
 **What it did:** `evaluate_grok.py` and `evaluate_grok2.py` both used hardcoded test data — manually written questions, contexts, and answers about transformer applications in cancer detection and bioinformatics. They did not call the Still Thinking pipeline at all; the data was embedded directly in the script.
 
-**Why it was abandoned:** It was a prototype to confirm that RAGAS could be wired to a non-OpenAI judge via the OpenAI-compatible interface. It produced correct faithfulness scores on the static data. However, the script was not integrated with the pipeline or the test_queries.json test set, the API key was hardcoded in plaintext in the source, and Groq's free tier rate limits would not support the full evaluation loop. It was a proof-of-concept, not a production evaluator.
+**Why it was abandoned:** It was a prototype to confirm that RAGAS could be wired to a non-OpenAI judge via the OpenAI-compatible interface. It produced correct faithfulness scores on the static data. However, the script was not integrated with the pipeline or the test_queries.json test set, and Groq's free tier rate limits would not support the full evaluation loop. It was a proof-of-concept, not a production evaluator. (The API key was hardcoded locally during this experiment as a shortcut — the script was never committed to version control, so no credential was ever exposed in the repository; later scripts load all keys from environment variables via `.env`.)
 
 ---
 
