@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+# Illustrative example data (not real guardrail output) to demonstrate the metric.
 # True labels: 1 = scientific (should pass), 0 = junk (should be blocked)
 y_true = [1, 1, 0, 0, 0, 1]
 # Predicted labels (1 = not blocked, 0 = blocked)

@@ -1,3 +1,4 @@
+import os
 import requests
 import pandas as pd
 import json
@@ -6,6 +7,7 @@ import seaborn as sns
 from evaluation_utils import calculate_ndcg
 
 API_URL = "http://localhost:8000/search"
+OUTPUT_DIR = "evaluation_mrr"
 
 # --- MRR FUNCTION ---
 def calculate_mrr(gold_ids, test_ids):
@@ -19,7 +21,8 @@ def calculate_mrr(gold_ids, test_ids):
     return 0.0
 
 def run_main_evaluation():
-    with open("evaluation_mrrgold_standard.json", "r") as f:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(os.path.join(OUTPUT_DIR, "gold_standard.json"), "r") as f:
         gold_standard = json.load(f)
     
     results = []
@@ -60,7 +63,7 @@ def run_main_evaluation():
 
     # Save the results
     df = pd.DataFrame(results)
-    df.to_csv("evaluation_mrrresults_main.csv", index=False)
+    df.to_csv(os.path.join(OUTPUT_DIR, "results_main.csv"), index=False)
 
     # --- VISUALIZATION ---
     sns.set_theme(style="whitegrid")
@@ -70,21 +73,21 @@ def run_main_evaluation():
     sns.barplot(x="Config", y="NDCG", data=df, capsize=.1, errorbar=('ci', 95), palette="viridis")
     plt.title("Overall Ranking Quality: NDCG (CI 95%)")
     plt.ylim(0, 1.05)
-    plt.savefig("evaluation_mrrkiller_chart_ndcg.png")
+    plt.savefig(os.path.join(OUTPUT_DIR, "killer_chart_ndcg.png"))
 
     # Chart 2: MRR bar chart
     plt.figure(figsize=(10, 6))
     sns.barplot(x="Config", y="MRR", data=df, capsize=.1, errorbar=('ci', 95), palette="magma")
     plt.title("Top-1 Precision: Mean Reciprocal Rank (CI 95%)")
     plt.ylim(0, 1.05)
-    plt.savefig("evaluation_mrrkiller_chart_mrr.png")
+    plt.savefig(os.path.join(OUTPUT_DIR, "killer_chart_mrr.png"))
 
     # Chart 3: latency vs NDCG
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x="Latency", y="NDCG", hue="Config", s=150, data=df, palette="deep")
     plt.title("Trade-off: Latency vs Quality (NDCG)")
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.savefig("evaluation_mrrlatency_quality.png")
+    plt.savefig(os.path.join(OUTPUT_DIR, "latency_quality.png"))
 
     print("✅ Evaluation completed successfully.")
     print("\n📊 Mean Metrics Summary:")
